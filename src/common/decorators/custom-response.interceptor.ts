@@ -3,7 +3,7 @@ import { ICustomResponse } from '../interfaces/response.interface';
 import { CustomResponseInterceptor } from '../interceptors/custom-response.interceptor';
 import { API_RESPONSE_META_KEY } from '../constants/api-response.constant';
 
-export function CustomeResponse(
+export function CustomResponse(
   customResponseConfig: ICustomResponse,
 ): MethodDecorator {
   return applyDecorators(

@@ -1,5 +1,13 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { UserRole } from '../constants/user.enum';
+import { Shop } from 'src/modules/shop/entities/Shop';
 
 @Entity({ name: 'user' })
 export class User extends BaseEntity {
@@ -37,6 +45,13 @@ export class User extends BaseEntity {
   })
   role: UserRole;
 
+  @OneToOne((type) => Shop)
+  @JoinColumn({ name: 'shopId' })
+  shop: Shop;
+
   @Column({ default: false })
   isActive?: boolean;
+
+  @Column({ nullable: true })
+  refreshToken?: string;
 }

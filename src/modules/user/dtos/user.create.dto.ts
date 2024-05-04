@@ -20,7 +20,7 @@ export class UserCreateDto {
   @IsString()
   readonly firstName: string;
 
-  @ApiProperty({ example: faker.person.lastName(), required: false })
+  @ApiProperty({ example: faker.person.lastName(), required: true })
   @IsNotEmpty()
   @IsString()
   readonly lastName: string;
@@ -42,7 +42,7 @@ export class UserCreateDto {
   @IsOptional()
   @MinLength(10)
   @MaxLength(14)
-  @ValidateIf((e) => e.mobileNumber !== '')
+  @ValidateIf((e) => e.phone !== '')
   readonly phone: string;
 
   @ApiProperty({

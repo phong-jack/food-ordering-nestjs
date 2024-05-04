@@ -1,0 +1,31 @@
+export enum CATEGORY_ID {
+  FOOD = 1,
+  DRINK = 2,
+  VEGETARIAN = 3,
+  CAKE = 4,
+  DESSERT = 5,
+  HOMEMADE = 6,
+  STREET_FOOD = 7,
+  PIZZA_BURGER = 8,
+  CHICKEN_DISH = 9,
+  HOT_POT = 10,
+  SUSHI = 11,
+  PHO = 12,
+  RICE_BOX = 13,
+}
+
+export enum CATEGORY {
+  FOOD = 'Đồ ăn',
+  DRINK = 'Đồ uống',
+  VEGETARIAN = 'Đồ chay',
+  CAKE = 'Bánh kem',
+  DESSERT = 'Tráng miệng',
+  HOMEMADE = 'Homemade',
+  STREET_FOOD = 'Vỉa hè',
+  PIZZA_BURGER = 'Pizza/Burger',
+  CHICKEN_DISH = 'Món gà',
+  HOT_POT = 'Món lẩu',
+  SUSHI = 'Sushi',
+  PHO = 'Mì phở',
+  RICE_BOX = 'Cơm hộp',
+}

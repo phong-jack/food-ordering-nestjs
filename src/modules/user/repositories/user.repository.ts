@@ -1,7 +1,8 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository } from 'typeorm';
 import { UserCreateDto } from '../dtos/user.create.dto';
+import { UserUpdateDto } from '../dtos/user.update.dto';
 
 export class UserRepository {
   constructor(
@@ -9,27 +10,36 @@ export class UserRepository {
   ) {}
 
   async findAll(): Promise<User[]> {
-    return this.userRepository.find();
+    return await this.userRepository.find();
   }
 
-  public async findById(id: number): Promise<User | undefined> {
-    return this.userRepository.findOne({ where: { id } });
+  async findById(id: number): Promise<User | undefined> {
+    return await this.userRepository.findOne({ where: { id } });
   }
 
-  public async createUser(userCreateDto: UserCreateDto): Promise<User> {
-    const newUser = this.userRepository.create(userCreateDto);
-    return this.userRepository.save(newUser);
+  async findOneByUserName(username: string) {
+    return await this.userRepository.findOne({ where: { username: username } });
   }
 
-  public async updateUser(
+  async createUser(userCreateDto: UserCreateDto): Promise<User> {
+    const newUser = await this.userRepository.create(userCreateDto);
+    return await this.userRepository.save(newUser);
+  }
+
+  async updateUser(
     id: number,
-    userCreateDto: UserCreateDto,
+    userCreateDto: UserUpdateDto,
   ): Promise<User | undefined> {
-    await this.userRepository.update(id, userCreateDto);
-    return this.findById(id);
+    const user = await this.userRepository.findBy({ id });
+    if (!user) throw new Error('User not found!');
+    await this.userRepository.save({ id, ...userCreateDto });
+    return await this.findById(id);
   }
 
-  public async deleteUser(id: number): Promise<void> {
-    await this.userRepository.delete(id);
+  async deleteUser(id: number): Promise<void> {
+    const result: DeleteResult = await this.userRepository.delete(id);
+    if (result.affected === 0) {
+      throw new Error('User not found');
+    }
   }
 }
