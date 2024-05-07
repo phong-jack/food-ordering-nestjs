@@ -87,6 +87,13 @@ export class AuthService {
     return mailToken;
   }
 
+  async handleVerifyToken(token) {
+    const user = await this.jwtService.verify(token, {
+      secret: process.env.JWT_ACCESS_SECRET,
+    });
+    return user['sub'];
+  }
+
   private async getTokens(
     userId: number,
     username: string,
