@@ -4,8 +4,6 @@ import { Order } from '../entities/order.entity';
 import { BadRequestException } from '@nestjs/common';
 import { OrderCreateDto } from '../dtos/order.create.dto';
 import { ORDER_STATUS } from '../constants/order-status.constant';
-import { OrderDetail } from '../entities/order-detail.entity';
-import { OrderDetailRepository } from './order-detail.repository';
 
 export class OrderRepository {
   constructor(
@@ -18,7 +16,10 @@ export class OrderRepository {
   }
 
   async findById(id: number): Promise<Order> {
-    const order = await this.orderRepository.findOne({ where: { id } });
+    const order = await this.orderRepository.findOne({
+      relations: { shop: true, user: true, orderStatus: true },
+      where: { id },
+    });
     if (!order) throw new BadRequestException('Order not found!');
     return order;
   }
@@ -28,7 +29,7 @@ export class OrderRepository {
       ...orderCreateDto,
       user: { id: orderCreateDto.userId },
       shop: { id: orderCreateDto.shopId },
-      orderStatus: { statusCode: 1 },
+      orderStatus: { statusCode: ORDER_STATUS.INIT },
     });
     return await this.orderRepository.save(newOrder);
   }

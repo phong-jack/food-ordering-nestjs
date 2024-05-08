@@ -1,18 +1,16 @@
 import { Module } from '@nestjs/common';
 import { UserModule } from './modules/user/user.module';
 import { ConfigModule } from '@nestjs/config';
-import { User } from './modules/user/entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module';
 import { ShopModule } from './modules/shop/shop.module';
-import { Shop } from './modules/shop/entities/Shop';
 import { MailModule } from './modules/mail/mail.module';
 import { OrderModule } from './modules/order/order.module';
-import { Order } from './modules/order/entities/order.entity';
-import { OrderStatus } from './modules/order/entities/order-status.entity';
 import { ProductModule } from './modules/product/product.module';
 import { Product } from './modules/product/entities/product.entity';
 import { Category } from './modules/product/entities/category.entity';
+import { CacheModule } from '@nestjs/cache-manager';
+import { memoryStore } from 'cache-manager';
 
 @Module({
   imports: [
@@ -34,12 +32,19 @@ import { Category } from './modules/product/entities/category.entity';
         autoLoadEntities: true,
       }),
     }),
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 5,
+      max: 10,
+      store: memoryStore,
+    }),
     UserModule,
     AuthModule,
     ShopModule,
     MailModule,
     OrderModule,
     ProductModule,
+    CacheMemoryModule,
   ],
 })
 export class AppModule {}

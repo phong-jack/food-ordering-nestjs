@@ -4,24 +4,22 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Order } from './order.entity';
 import { Product } from 'src/modules/product/entities/product.entity';
+import { Order } from './order.entity';
 
-@Entity('order-detail')
+@Entity('order_detail')
 export class OrderDetail extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne((type) => Order)
-  @JoinColumn({ name: 'orderId' })
-  order: Order;
-
-  @OneToOne((type) => Product)
+  @ManyToOne((type) => Product)
   @JoinColumn({ name: 'productId' })
   product: Product;
+
+  @ManyToOne(() => Order, (order) => order.orderDetails)
+  order: Order;
 
   @Column()
   quantity: number;

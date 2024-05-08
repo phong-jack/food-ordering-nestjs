@@ -17,10 +17,13 @@ export class OrderService {
         this.orderDetailService.createOrderDetail(order.id, orderDetail),
       ),
     );
-
     return {
       ...order,
       orderDetail,
     };
+  }
+
+  async findById(id: number) {
+    return await this.orderRepository.findById(id);
   }
 }

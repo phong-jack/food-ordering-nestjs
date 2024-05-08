@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { UserRole } from '../constants/user.enum';
 import { Shop } from 'src/modules/shop/entities/Shop';
+import { Exclude } from 'class-transformer';
 
 @Entity({ name: 'user' })
 export class User extends BaseEntity {

@@ -13,6 +13,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { OrderStatus } from './order-status.entity';
+import { OrderDetail } from './order-detail.entity';
 
 @Entity('order')
 export class Order extends BaseEntity {
@@ -30,6 +31,9 @@ export class Order extends BaseEntity {
   @ManyToOne((type) => OrderStatus)
   @JoinColumn({ name: 'orderStatusCode' })
   orderStatus: OrderStatus;
+
+  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.order)
+  orderDetails: OrderDetail[];
 
   @CreateDateColumn()
   createdAt: Date;

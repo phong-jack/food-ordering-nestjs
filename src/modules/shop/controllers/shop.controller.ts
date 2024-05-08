@@ -14,6 +14,13 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CustomResponse } from 'src/common/decorators/custom-response.interceptor';
 import { ShopCreateDto } from '../dtos/shop.create.dto';
 import { ShopUpdateDto } from '../dtos/shop.update.dto';
+import {
+  CACHE_MANAGER,
+  CacheInterceptor,
+  CacheKey,
+  CacheTTL,
+} from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @ApiBearerAuth()
 @ApiTags('shop')
@@ -25,6 +32,8 @@ export class ShopController {
     message: 'Get shops success!',
     statusCode: HttpStatus.OK,
   })
+  @UseInterceptors(HttpCacheInteceptor)
+  @ConfigCache({ cacheKey: 'Cache', eachUserConfig: true })
   @Get()
   async findAll() {
     return await this.shopService.findAll();
