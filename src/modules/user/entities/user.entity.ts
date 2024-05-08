@@ -30,6 +30,7 @@ export class User extends BaseEntity {
   @Column({ unique: true, length: 255 })
   username?: string;
 
+  @Exclude()
   @Column()
   password?: string;
 
@@ -53,6 +54,7 @@ export class User extends BaseEntity {
   @Column({ default: false })
   isActive?: boolean;
 
+  @Exclude()
   @Column({ nullable: true })
   refreshToken?: string;
 }

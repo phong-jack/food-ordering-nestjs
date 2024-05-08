@@ -16,5 +16,6 @@ import { MailModule } from '../mail/mail.module';
     RefreshTokenStrategy,
     JwtService,
   ],
+  exports: [AuthService],
 })
 export class AuthModule {}

@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ShopService } from '../services/shop.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -21,6 +22,8 @@ import {
   CacheTTL,
 } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { ConfigCache } from 'src/common/cache/decorators/cache.decorator';
+import { HttpCacheInteceptor } from 'src/common/interceptors/http-cache.interceptor';
 
 @ApiBearerAuth()
 @ApiTags('shop')

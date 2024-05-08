@@ -5,6 +5,7 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Relation,
 } from 'typeorm';
 import { Product } from 'src/modules/product/entities/product.entity';
 import { Order } from './order.entity';
@@ -19,7 +20,7 @@ export class OrderDetail extends BaseEntity {
   product: Product;
 
   @ManyToOne(() => Order, (order) => order.orderDetails)
-  order: Order;
+  order: Relation<Order>;
 
   @Column()
   quantity: number;

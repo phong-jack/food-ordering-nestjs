@@ -18,7 +18,11 @@ export class UserRepository {
   }
 
   async findOneByUserName(username: string) {
-    return await this.userRepository.findOne({ where: { username: username } });
+    const user = await this.userRepository.findOne({
+      relations: { shop: true },
+      where: { username: username },
+    });
+    return user;
   }
 
   async createUser(userCreateDto: UserCreateDto): Promise<User> {

@@ -27,5 +27,6 @@ import { OrderDetailService } from './services/order-detail.service';
     OrderStatusRepository,
   ],
   controllers: [OrderController],
+  exports: [OrderService],
 })
 export class OrderModule {}

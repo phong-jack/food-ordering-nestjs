@@ -33,4 +33,22 @@ export class OrderRepository {
     });
     return await this.orderRepository.save(newOrder);
   }
+
+  async findOrderByUser(userId: number) {
+    const orders = await this.orderRepository.find({
+      relations: { user: true, shop: true, orderDetails: true },
+      where: { user: { id: userId } },
+    });
+
+    return orders;
+  }
+
+  async findOrderByShop(shopId: number): Promise<Order[]> {
+    const orders = await this.orderRepository.find({
+      relations: { user: true, shop: true, orderDetails: true },
+      where: { shop: { id: shopId } },
+    });
+
+    return orders;
+  }
 }

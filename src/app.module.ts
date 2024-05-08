@@ -11,6 +11,11 @@ import { Product } from './modules/product/entities/product.entity';
 import { Category } from './modules/product/entities/category.entity';
 import { CacheModule } from '@nestjs/cache-manager';
 import { memoryStore } from 'cache-manager';
+import { CacheMemoryModule } from './common/cache/cache-memory.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { EventGateway } from './common/gateway/event.gateway';
+import { GatewayModule } from './common/gateway/gateway.module';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -38,6 +43,7 @@ import { memoryStore } from 'cache-manager';
       max: 10,
       store: memoryStore,
     }),
+    EventEmitterModule.forRoot({ global: true }),
     UserModule,
     AuthModule,
     ShopModule,
@@ -45,6 +51,8 @@ import { memoryStore } from 'cache-manager';
     OrderModule,
     ProductModule,
     CacheMemoryModule,
+    ChatModule,
+    GatewayModule,
   ],
 })
 export class AppModule {}

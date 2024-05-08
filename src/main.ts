@@ -5,6 +5,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
 import { TypeORMExceptionFilter } from './common/filters/type-orm-exception.filter';
 import { ErrorExceptionsFilter } from './common/filters/error-exeption.filter';
+import { WebsocketExceptionsFilter } from './common/filters/websocket-exception.filter';
 
 async function bootstrap() {
   const app: NestApplication = await NestFactory.create(AppModule);
@@ -15,6 +16,7 @@ async function bootstrap() {
   //filter
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(
+    new WebsocketExceptionsFilter(),
     new TypeORMExceptionFilter(),
     new ErrorExceptionsFilter(),
     new HttpExceptionFilter(),

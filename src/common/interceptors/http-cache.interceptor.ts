@@ -23,9 +23,6 @@ export class HttpCacheInteceptor extends CacheInterceptor {
       context.getHandler(),
     );
 
-    console.log('cache key:: ', cacheKey);
-    console.log('cache foreach user:: ', cacheForEachUser);
-
     if (cacheKey) {
       if (cacheForEachUser) {
         return `${cacheKey}-user:${request?.user?.sub}-query:${request._parseUrl?.path}`;

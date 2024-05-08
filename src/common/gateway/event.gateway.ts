@@ -1,18 +1,26 @@
 import { OnEvent } from '@nestjs/event-emitter';
 import {
   ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/modules/auth/services/auth.service';
-import { WEBSOCKET_EVENTS } from './constants/websocket.constant';
 import { SERVER_EVENTS } from '../events/constants/events.constant';
+import { OrderService } from 'src/modules/order/services/order.service';
+import { ChatSerivce } from 'src/modules/chat/chat.service';
+import { UserRole } from 'src/modules/user/constants/user.enum';
+import { UseFilters } from '@nestjs/common';
+import { WebsocketExceptionsFilter } from '../filters/websocket-exception.filter';
+import { SendMessageDto } from './dtos/send-message.dto';
 
+@UseFilters(new WebsocketExceptionsFilter())
 @WebSocketGateway({
   cors: { origin: ['*'] },
   pingInterval: 10000,
@@ -21,27 +29,53 @@ import { SERVER_EVENTS } from '../events/constants/events.constant';
 export class EventGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly orderService: OrderService,
+    private readonly chatService: ChatSerivce,
+  ) {}
   @WebSocketServer()
   server: Server;
+  private connectedClients: Map<number, Socket> = new Map();
 
-  constructor(private readonly authService: AuthService) {}
+  private addToConnectedClient(userId: number, client: Socket) {
+    this.connectedClients.set(userId, client);
+  }
 
   afterInit(socket: Socket) {}
 
-  async handleConnection(socket: Socket) {
-    const authHeader = socket.handshake.headers.authorization;
+  async handleConnection(client: Socket) {
+    const authHeader = client.handshake.headers.authorization;
     if (authHeader && (authHeader as string).split('')[1]) {
       try {
-        const sub = await this.authService.handleVerifyToken(
+        const user = await this.authService.handleVerifyToken(
           (authHeader as string).split(' ')[1],
         );
-        socket.data.sub = sub;
-        console.log('connect success:: ', socket.data.sub);
+        client.data.user = user;
+
+        if (user?.role === UserRole.SHOP) {
+          const orders = await this.orderService.findOrderByShop(user.shopId);
+          orders.forEach((order) => {
+            client.join(this.makeRoomName(order.id));
+          });
+        } else {
+          const orders = await this.orderService.findOrderByUser(user?.id);
+          orders.forEach((order) => {
+            client.join(this.makeRoomName(order.id));
+          });
+        }
+
+        this.addToConnectedClient(user.id, client);
+
+        // const member = this.connectedClients.get(user.id)
+        // if(member) {
+        //   member.join(this.makeRoomName(chatId))
+        // }
       } catch (error) {
-        socket.disconnect();
+        client.disconnect();
       }
     } else {
-      socket.disconnect();
+      client.disconnect();
     }
   }
 
@@ -53,24 +87,52 @@ export class EventGateway
     console.log('disconect: ', socket.id, socket.data?.sub);
   }
 
-  async sendNewOrderNotification(orderId: number, orderData: any) {
-    this.server.to(`${orderId}`).emit('new_order', { orderId, orderData });
-    this.server.emit('new_order', { orderId, orderData });
-  }
-
   @OnEvent(SERVER_EVENTS.ORDER_CREATE)
-  async createOrder(socket: Socket, orderId: number) {
-    const msg = `Order #${orderId} created!`;
-    const room = `room_order_${orderId}`;
-
-    // socket.join(room);
-    this.server.emit(WEBSOCKET_EVENTS.ORDER_CREATE, msg);
+  async sendNewOrderNotification(orderId: number, orderData: any) {
+    this.joinOrderRoom(orderId);
+    const msg = `order #${orderId} was created!`;
+    this.server.to(this.makeRoomName(orderId)).emit('onOrderCreate', msg);
   }
 
-  @SubscribeMessage('joinRoom')
-  handleJoinRoom(socket: Socket, orderId: number) {
-    const room = `room_order_${orderId}`;
-    socket.join(room);
-    socket.emit('joinedRoom', room);
+  joinOrderRoom(orderId: number) {
+    this.server.socketsJoin(this.makeRoomName(orderId));
+  }
+
+  //test recive message:
+  @SubscribeMessage('sendMessageToRoom')
+  sendMessage(client: Socket, messagePayload: SendMessageDto) {
+    console.log(messagePayload);
+
+    if (
+      !Array.from(client.rooms).includes(
+        this.makeRoomName(messagePayload.orderId),
+      )
+    ) {
+      // this.server.emit('error', 'You have not chat permission in this order!');
+      throw new WsException('You have not chat permission in this order!');
+    }
+    this.chatService.saveMessage(
+      messagePayload.message,
+      client.data.user.sub,
+      messagePayload.orderId,
+    );
+    this.server
+      .to(this.makeRoomName(messagePayload.orderId))
+      .emit('sendedMessage', messagePayload.message);
+  }
+
+  @SubscribeMessage('request_all_messages')
+  async requestAllMessages(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() orderId: number,
+  ) {
+    // await this.chatService.getUserFromSocket(socket);
+    const messages = await this.chatService.findMessageByOrder(orderId);
+    // socket.emit('send_all_messages', messages);
+    socket.emit('send_all_messages');
+  }
+
+  private makeRoomName(orderId: number): string {
+    return `order-${orderId}`;
   }
 }

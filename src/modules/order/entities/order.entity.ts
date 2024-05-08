@@ -10,6 +10,7 @@ import {
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
+  Relation,
   UpdateDateColumn,
 } from 'typeorm';
 import { OrderStatus } from './order-status.entity';
@@ -33,7 +34,7 @@ export class Order extends BaseEntity {
   orderStatus: OrderStatus;
 
   @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.order)
-  orderDetails: OrderDetail[];
+  orderDetails: Relation<OrderDetail>[];
 
   @CreateDateColumn()
   createdAt: Date;

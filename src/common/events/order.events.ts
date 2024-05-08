@@ -9,11 +9,7 @@ export class OrderEvents {
   constructor(private readonly gateway: EventGateway) {}
 
   @OnEvent(SERVER_EVENTS.ORDER_CREATE)
-  orderCreate(orderId: number) {
-    // this.gateway.server.emit(WEBSOCKET_EVENTS.ORDER_CREATE, orderId);
-    const room = `order_create_${orderId}`;
-
-    const msg = `Order #${orderId} created!`;
-    this.gateway.server.emit(WEBSOCKET_EVENTS.ORDER_CREATE, msg);
+  orderCreate(orderId: number, orderData: any) {
+    this.gateway.sendNewOrderNotification(orderId, orderData);
   }
 }

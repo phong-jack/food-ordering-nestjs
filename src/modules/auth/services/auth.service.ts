@@ -32,6 +32,7 @@ export class AuthService {
       newUser.username,
       newUser.role,
       newUser.isActive,
+      newUser.shop?.id,
     );
     await this.updateRefreshToken(newUser.id, tokens.refreshToken);
     const mailToken = await this.getMailToken(newUser.id, newUser.username);
@@ -62,6 +63,7 @@ export class AuthService {
       user.username,
       user.role,
       user.isActive,
+      user.shop?.id,
     );
     await this.updateRefreshToken(user.id, tokens.refreshToken);
     return { user, tokens };
@@ -91,7 +93,7 @@ export class AuthService {
     const user = await this.jwtService.verify(token, {
       secret: process.env.JWT_ACCESS_SECRET,
     });
-    return user['sub'];
+    return user;
   }
 
   private async getTokens(
@@ -99,21 +101,18 @@ export class AuthService {
     username: string,
     role: string,
     isActive: boolean,
+    shopId: number,
   ) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
-        { sub: userId, username, role, isActive },
+        { sub: userId, username, role, isActive, shopId },
         {
           secret: process.env.JWT_ACCESS_SECRET,
           expiresIn: '15m',
         },
       ),
       this.jwtService.signAsync(
-        {
-          sub: userId,
-          username,
-          role,
-        },
+        { sub: userId, username, role, isActive, shopId },
         {
           secret: process.env.JWT_REFRESH_SECRET,
           expiresIn: '7d',
