@@ -1,5 +1,6 @@
 import { OnEvent } from '@nestjs/event-emitter';
 import {
+  BaseWsExceptionFilter,
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
@@ -16,11 +17,12 @@ import { SERVER_EVENTS } from '../events/constants/events.constant';
 import { OrderService } from 'src/modules/order/services/order.service';
 import { ChatSerivce } from 'src/modules/chat/chat.service';
 import { UserRole } from 'src/modules/user/constants/user.enum';
-import { UseFilters } from '@nestjs/common';
+import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import { WebsocketExceptionsFilter } from '../filters/websocket-exception.filter';
 import { SendMessageDto } from './dtos/send-message.dto';
 
 @UseFilters(new WebsocketExceptionsFilter())
+@UsePipes(new ValidationPipe({ transform: true }))
 @WebSocketGateway({
   cors: { origin: ['*'] },
   pingInterval: 10000,
@@ -66,7 +68,7 @@ export class EventGateway
         }
 
         this.addToConnectedClient(user.id, client);
-
+        console.log(client.data.user);
         // const member = this.connectedClients.get(user.id)
         // if(member) {
         //   member.join(this.makeRoomName(chatId))
@@ -79,16 +81,19 @@ export class EventGateway
     }
   }
 
-  async joinRoom(@ConnectedSocket() socket: Socket, room: string) {
-    socket.join(room);
-  }
-
   handleDisconnect(@ConnectedSocket() socket: Socket) {
     console.log('disconect: ', socket.id, socket.data?.sub);
   }
 
   @OnEvent(SERVER_EVENTS.ORDER_CREATE)
-  async sendNewOrderNotification(orderId: number, orderData: any) {
+  async sendNewOrderNotification(orderId: number) {
+    const order = await this.orderService.findById(orderId);
+    this.connectedClients.forEach((client) => {
+      if (client.data.user?.shopId === order.shop.id) {
+        this.clientJoinRoom(client, this.makeRoomName(order.id));
+      }
+    });
+
     this.joinOrderRoom(orderId);
     const msg = `order #${orderId} was created!`;
     this.server.to(this.makeRoomName(orderId)).emit('onOrderCreate', msg);
@@ -98,17 +103,18 @@ export class EventGateway
     this.server.socketsJoin(this.makeRoomName(orderId));
   }
 
-  //test recive message:
+  clientJoinRoom(client: Socket, room: string) {
+    client.join(room);
+  }
+
   @SubscribeMessage('sendMessageToRoom')
   sendMessage(client: Socket, messagePayload: SendMessageDto) {
     console.log(messagePayload);
-
     if (
       !Array.from(client.rooms).includes(
         this.makeRoomName(messagePayload.orderId),
       )
     ) {
-      // this.server.emit('error', 'You have not chat permission in this order!');
       throw new WsException('You have not chat permission in this order!');
     }
     this.chatService.saveMessage(
@@ -119,17 +125,6 @@ export class EventGateway
     this.server
       .to(this.makeRoomName(messagePayload.orderId))
       .emit('sendedMessage', messagePayload.message);
-  }
-
-  @SubscribeMessage('request_all_messages')
-  async requestAllMessages(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() orderId: number,
-  ) {
-    // await this.chatService.getUserFromSocket(socket);
-    const messages = await this.chatService.findMessageByOrder(orderId);
-    // socket.emit('send_all_messages', messages);
-    socket.emit('send_all_messages');
   }
 
   private makeRoomName(orderId: number): string {

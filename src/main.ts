@@ -1,11 +1,17 @@
-import { HttpAdapterHost, NestApplication, NestFactory } from '@nestjs/core';
+import {
+  HttpAdapterHost,
+  NestApplication,
+  NestFactory,
+  Reflector,
+} from '@nestjs/core';
 import { AppModule } from './app.module';
 import swaggerInit from './swagger';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { TypeORMExceptionFilter } from './common/filters/type-orm-exception.filter';
 import { ErrorExceptionsFilter } from './common/filters/error-exeption.filter';
 import { WebsocketExceptionsFilter } from './common/filters/websocket-exception.filter';
+import { RedisIoAdapter } from './common/gateway/redis.adapter';
 
 async function bootstrap() {
   const app: NestApplication = await NestFactory.create(AppModule);
@@ -21,6 +27,12 @@ async function bootstrap() {
     new ErrorExceptionsFilter(),
     new HttpExceptionFilter(),
   );
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+
+  const redisIoAdapter = new RedisIoAdapter(app);
+  await redisIoAdapter.connectToRedis();
+
+  app.useWebSocketAdapter(redisIoAdapter);
 
   await app.listen(3000);
 

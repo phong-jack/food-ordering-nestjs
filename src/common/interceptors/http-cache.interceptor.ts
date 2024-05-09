@@ -1,6 +1,7 @@
 import { CACHE_KEY_METADATA, CacheInterceptor } from '@nestjs/cache-manager';
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { CACHE_EACH_USER_CONFIG_META_KEY } from '../cache/constants/cache.constant';
+import { CacheService } from '../cache/cache.service';
 
 @Injectable()
 export class HttpCacheInteceptor extends CacheInterceptor {

@@ -7,15 +7,12 @@ import { ShopModule } from './modules/shop/shop.module';
 import { MailModule } from './modules/mail/mail.module';
 import { OrderModule } from './modules/order/order.module';
 import { ProductModule } from './modules/product/product.module';
-import { Product } from './modules/product/entities/product.entity';
-import { Category } from './modules/product/entities/category.entity';
 import { CacheModule } from '@nestjs/cache-manager';
 import { memoryStore } from 'cache-manager';
 import { CacheMemoryModule } from './common/cache/cache-memory.module';
 import { ChatModule } from './modules/chat/chat.module';
-import { EventGateway } from './common/gateway/event.gateway';
 import { GatewayModule } from './common/gateway/gateway.module';
-import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [

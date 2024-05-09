@@ -3,11 +3,13 @@ import { User } from 'src/modules/user/entities/user.entity';
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   Relation,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -24,4 +26,10 @@ export class Message extends BaseEntity {
   @ManyToOne(() => Order)
   @JoinColumn({ name: 'orderId' })
   orderId: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

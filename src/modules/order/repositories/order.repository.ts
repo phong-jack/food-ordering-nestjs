@@ -4,6 +4,7 @@ import { Order } from '../entities/order.entity';
 import { BadRequestException } from '@nestjs/common';
 import { OrderCreateDto } from '../dtos/order.create.dto';
 import { ORDER_STATUS } from '../constants/order-status.constant';
+import { OrderChangeStatusDto } from '../dtos/order.change-status.dto';
 
 export class OrderRepository {
   constructor(
@@ -50,5 +51,12 @@ export class OrderRepository {
     });
 
     return orders;
+  }
+
+  async changeStatus(id: number, { statusCode }: OrderChangeStatusDto) {
+    return await this.orderRepository.save({
+      id: id,
+      orderStatus: { statusCode: statusCode },
+    });
   }
 }

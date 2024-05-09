@@ -9,6 +9,7 @@ export default async function (app: NestApplication) {
     .addTag('user')
     .addTag('auth')
     .addTag('product')
+    .addTag('order')
     .addBearerAuth()
     .build();
 
