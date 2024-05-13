@@ -67,13 +67,7 @@ export class OrderService {
     }
 
     if (order.orderStatus.statusCode === ORDER_STATUS.ACCEPTED) {
-      if (
-        [
-          ORDER_STATUS.ACCEPTED,
-          ORDER_STATUS.INIT,
-          ORDER_STATUS.SHIPPING,
-        ].includes(statusCode)
-      ) {
+      if ([ORDER_STATUS.ACCEPTED, ORDER_STATUS.INIT].includes(statusCode)) {
         throw new BadRequestException("Order can't change to this status!");
       }
     }

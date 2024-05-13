@@ -3,12 +3,15 @@ import {
   Column,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
+  Relation,
 } from 'typeorm';
 import { UserRole } from '../constants/user.enum';
 import { Shop } from 'src/modules/shop/entities/Shop';
 import { Exclude } from 'class-transformer';
+import { Setting } from 'src/modules/setting/entities/setting.entity';
 
 @Entity({ name: 'user' })
 export class User extends BaseEntity {
@@ -30,6 +33,7 @@ export class User extends BaseEntity {
   @Column({ unique: true, length: 255 })
   username?: string;
 
+  @Exclude()
   @Column()
   password?: string;
 
@@ -49,6 +53,9 @@ export class User extends BaseEntity {
   @OneToOne((type) => Shop)
   @JoinColumn({ name: 'shopId' })
   shop: Shop;
+
+  @OneToMany(() => Setting, (setting) => setting.user)
+  settings: Relation<Setting[]>;
 
   @Column({ default: false })
   isActive?: boolean;
