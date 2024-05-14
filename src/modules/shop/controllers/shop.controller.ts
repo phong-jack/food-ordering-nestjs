@@ -6,8 +6,10 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
+  Req,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -33,6 +35,11 @@ import { AccessTokenGuard } from 'src/modules/auth/guards/access-token.guard';
 import { Shop } from '../entities/Shop';
 import { AppAbility } from 'src/modules/casl/casl-ability.factory';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
+import { ShopLocateUpdateDto } from '../dtos/shop-locate.update.dto';
+import { Request } from 'express';
+import { RoleGuard } from 'src/modules/auth/guards/role.guard';
+import { Roles } from 'src/modules/auth/decorators/roles.decorator';
+import { UserRole } from 'src/modules/user/constants/user.enum';
 
 @UseGuards(AccessTokenGuard)
 @ApiBearerAuth()
@@ -51,6 +58,15 @@ export class ShopController {
   @Get()
   async findAll() {
     return await this.shopService.findAll();
+  }
+
+  @UseGuards(RoleGuard, PoliciesGuard)
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, Shop))
+  @Roles(UserRole.USER)
+  @Get('find-distance')
+  async findShopByDistance(@Req() req) {
+    const userId = req.user['sub'];
+    return await this.shopService.findShopByDistance(userId);
   }
 
   @Public()
@@ -96,8 +112,25 @@ export class ShopController {
     message: 'Delete shop success!',
     statusCode: HttpStatus.OK,
   })
-  @Delete('/delete/:id')
+  @Delete('delete/:id')
   async deleteShop(@Param('id', ParseIntPipe) id: number) {
     return await this.shopService.deleteShop(id);
+  }
+
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, Shop))
+  @CustomResponse({
+    message: 'Update shop success!',
+    statusCode: HttpStatus.OK,
+  })
+  @Patch('update-locate/:id')
+  async updateShopLocate(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() shopLocateUpdateDto: ShopLocateUpdateDto,
+  ) {
+    return await this.shopService.updateShopLocate(
+      id,
+      shopLocateUpdateDto.address,
+    );
   }
 }

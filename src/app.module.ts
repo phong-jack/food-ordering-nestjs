@@ -15,6 +15,7 @@ import { GatewayModule } from './common/gateway/gateway.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SettingModule } from './modules/setting/setting.module';
 import { CaslModule } from './modules/casl/casl.module';
+import { GeocodingModule } from './modules/geocoding/geocoding.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { CaslModule } from './modules/casl/casl.module';
     GatewayModule,
     SettingModule,
     CaslModule,
+    GeocodingModule,
   ],
 })
 export class AppModule {}

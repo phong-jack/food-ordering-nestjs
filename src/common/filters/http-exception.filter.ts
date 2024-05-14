@@ -4,6 +4,7 @@ import {
   ExceptionFilter,
   HttpException,
 } from '@nestjs/common';
+import { error } from 'console';
 import { Request, Response } from 'express';
 
 @Catch(HttpException)
@@ -23,6 +24,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message: message,
       timestamp: new Date().toISOString(),
       path: request.url,
+      stack: exception.stack,
     });
   }
 }

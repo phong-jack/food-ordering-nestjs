@@ -14,6 +14,10 @@ export class ShopRepository {
     return await this.shopRepository.find();
   }
 
+  async findAllWithDistance(): Promise<Shop[]> {
+    return await this.shopRepository.find({ relations: { locate: true } });
+  }
+
   async findOneById(id: number): Promise<Shop> {
     return await this.shopRepository.findOne({ where: { id: id } });
   }
@@ -24,8 +28,8 @@ export class ShopRepository {
   }
 
   async updateShop(id: number, shopUpdateDto: ShopUpdateDto): Promise<Shop> {
-    const user = await this.shopRepository.findBy({ id });
-    if (!user) throw new BadRequestException('Shop not found!');
+    const shop = await this.shopRepository.findBy({ id });
+    if (!shop) throw new BadRequestException('Shop not found!');
     await this.shopRepository.save({ id, ...shopUpdateDto });
     return await this.findOneById(id);
   }
@@ -34,5 +38,19 @@ export class ShopRepository {
     const shop = await this.findOneById(id);
     if (!shop) throw new BadRequestException('Shop not found!');
     await this.shopRepository.delete(id);
+  }
+
+  async updateShopLocate(id: number, address: string, locateId: number) {
+    const user = await this.findOneById(id);
+    if (!user) throw new BadRequestException('Shop not found!');
+    await this.shopRepository.save({
+      id,
+      address: address,
+      locate: { id: locateId },
+    });
+    return await this.shopRepository.findOne({
+      relations: { locate: true },
+      where: { id: id },
+    });
   }
 }
