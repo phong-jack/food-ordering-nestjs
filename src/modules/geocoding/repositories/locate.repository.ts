@@ -56,7 +56,6 @@ export class LocateRepository {
     locateUpdateDto: LocateUpdateDto,
   ): Promise<Locate> {
     const locate = await this.findByShop(shopId);
-    console.log(' CHECK Locate', locate);
     if (!locate) {
       return await this.createLocate({
         shopId: shopId,

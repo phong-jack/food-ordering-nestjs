@@ -4,12 +4,15 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SettingUpdateDto } from '../dtos/setting.update.dto';
 import { SETTING_KEY } from '../constants/setting.constant';
+import { BaseRepositoryAbstract } from 'src/common/base/base.abstract.repository';
 
 @Injectable()
-export class SettingRepository {
+export class SettingRepository extends BaseRepositoryAbstract<Setting> {
   constructor(
     @InjectRepository(Setting) private settingRepository: Repository<Setting>,
-  ) {}
+  ) {
+    super(settingRepository);
+  }
 
   async findAll(): Promise<Setting[]> {
     return await this.settingRepository.find();

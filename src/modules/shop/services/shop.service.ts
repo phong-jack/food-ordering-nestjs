@@ -4,7 +4,10 @@ import { Shop } from '../entities/Shop';
 import { ShopUpdateDto } from '../dtos/shop.update.dto';
 import { ShopCreateDto } from '../dtos/shop.create.dto';
 import { GeocodingService } from 'src/modules/geocoding/service/geocoding.service';
-import { GeocodingReponse } from 'src/modules/geocoding/interfaces/geocoding.response';
+import {
+  GeocodingReponse,
+  Geometry,
+} from 'src/modules/geocoding/interfaces/geocoding.response';
 import { LocateService } from 'src/modules/geocoding/service/locate.service';
 import { UserService } from 'src/modules/user/services/user/user.service';
 
@@ -21,24 +24,25 @@ export class ShopService {
     return await this.shopRepository.findAll();
   }
 
-  async findAllWithDistance(): Promise<Shop[]> {
-    return await this.shopRepository.findAllWithDistance();
-  }
-
   async findOneById(id: number): Promise<Shop> {
     return await this.shopRepository.findOneById(id);
   }
 
   async updateShop(id: number, shopUpdateDto: ShopUpdateDto) {
-    return await this.shopRepository.updateShop(id, shopUpdateDto);
+    const shop = await this.findOneById(id);
+    if (shop.address !== shopUpdateDto.address) {
+      await this.updateShopLocate(id, shopUpdateDto.address);
+    }
+    const updatedShop = await this.shopRepository.update(id, shopUpdateDto);
+    return updatedShop;
   }
 
   async createShop(shopCreateDto: ShopCreateDto) {
-    return await this.shopRepository.createShop(shopCreateDto);
+    return await this.shopRepository.create(shopCreateDto);
   }
 
   async deleteShop(id: number) {
-    await this.shopRepository.deleteShop(id);
+    await this.shopRepository.delete(id);
   }
 
   async updateShopLocate(id: number, address: string): Promise<Shop> {
@@ -61,26 +65,14 @@ export class ShopService {
     const place: GeocodingReponse = await this.geocodingSerivce.findByAddress(
       user.address,
     );
-    console.log(place);
-    const shops = await this.findAllWithDistance();
 
-    const sortedShops = shops
-      .map((shop) => {
-        if (!shop.locate) return { ...shop, distance: null };
-        const distance = this.geocodingSerivce.getDistanceFromLatLonInKm(
-          place.geometry.lat,
-          place.geometry.lng,
-          shop?.locate.lat,
-          shop?.locate.lng,
-        );
+    const userLocate = place.geometry;
+    const [shops, count] =
+      await this.shopRepository.findAllByDistance(userLocate);
 
-        return { ...shop, distance };
-      })
-      .sort((a, b) => {
-        if (a.distance === null) return 1;
-        if (b.distance === null) return -1;
-        return a.distance - b.distance;
-      });
-    return sortedShops;
+    return {
+      shops,
+      count,
+    };
   }
 }

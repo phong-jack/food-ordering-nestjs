@@ -116,21 +116,4 @@ export class ShopController {
   async deleteShop(@Param('id', ParseIntPipe) id: number) {
     return await this.shopService.deleteShop(id);
   }
-
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, Shop))
-  @CustomResponse({
-    message: 'Update shop success!',
-    statusCode: HttpStatus.OK,
-  })
-  @Patch('update-locate/:id')
-  async updateShopLocate(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() shopLocateUpdateDto: ShopLocateUpdateDto,
-  ) {
-    return await this.shopService.updateShopLocate(
-      id,
-      shopLocateUpdateDto.address,
-    );
-  }
 }

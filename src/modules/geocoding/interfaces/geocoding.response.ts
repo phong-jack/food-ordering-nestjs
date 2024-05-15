@@ -1,4 +1,4 @@
-interface Geometry {
+export interface Geometry {
   lat: number;
   lng: number;
 }
