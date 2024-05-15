@@ -6,6 +6,8 @@ import { JwtService } from '@nestjs/jwt';
 import { SignInDto } from '../dtos/auth.sign-in.dto';
 import { MailService } from 'src/modules/mail/mail.service';
 import { SendMailDto } from 'src/modules/mail/dtos/mail.send-mail.dto';
+import { ChangePasswordDto } from '../dtos/auth.change-password.dto';
+import { ForgotPasswordDto } from '../dtos/auth.forgot-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -70,7 +72,46 @@ export class AuthService {
   }
 
   async logout(userId: number) {
-    return this.userService.updateUser(userId, { refreshToken: null });
+    return await this.userService.updateUser(userId, { refreshToken: null });
+  }
+
+  async changePassword(userId: number, changePasswordDto: ChangePasswordDto) {
+    const validPassword =
+      changePasswordDto.password === changePasswordDto.rePassword;
+    if (!validPassword)
+      throw new BadRequestException('Password does not match!');
+
+    const user = await this.userService.findById(userId);
+    const isDuplicatePassword = await argon2.verify(
+      user.password,
+      changePasswordDto.password,
+    );
+    if (isDuplicatePassword)
+      throw new BadRequestException(
+        'Password used, plase re type new password',
+      );
+
+    const hashPassword = await this.hashData(changePasswordDto.password);
+    return await this.userService.updateUser(user.id, {
+      password: hashPassword,
+    });
+  }
+
+  async sendForgotMailRequest(forgotPasswordDto: ForgotPasswordDto) {
+    const user = await this.userService.findOneByEmail(forgotPasswordDto.email);
+    if (!user) throw new BadRequestException('User not found!');
+    const tokens = await this.getTokens(
+      user.id,
+      user.username,
+      user.role,
+      user.isActive,
+      user.shop?.id,
+    );
+    const sendMailDto: SendMailDto = { user: user, token: tokens.accessToken };
+    await this.mailService.sendForgotPasswordRequest(
+      sendMailDto.user,
+      sendMailDto.token,
+    );
   }
 
   private hashData(data: string) {

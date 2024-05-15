@@ -13,6 +13,8 @@ import { CacheMemoryModule } from './common/cache/cache-memory.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { GatewayModule } from './common/gateway/gateway.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { SettingModule } from './modules/setting/setting.module';
+import { CaslModule } from './modules/casl/casl.module';
 
 @Module({
   imports: [
@@ -50,6 +52,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     CacheMemoryModule,
     ChatModule,
     GatewayModule,
+    SettingModule,
+    CaslModule,
   ],
 })
 export class AppModule {}

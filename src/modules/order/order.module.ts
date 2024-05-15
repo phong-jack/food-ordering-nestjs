@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { OrderService } from './services/order.service';
 import { OrderController } from './controllers/order.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,6 +9,7 @@ import { OrderRepository } from './repositories/order.repository';
 import { OrderDetailRepository } from './repositories/order-detail.repository';
 import { OrderStatusRepository } from './repositories/order-status.repository';
 import { OrderDetailService } from './services/order-detail.service';
+import { CaslModule } from '../casl/casl.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { OrderDetailService } from './services/order-detail.service';
       OrderDetailRepository,
       OrderStatusRepository,
     ]),
+    forwardRef(() => CaslModule),
   ],
   providers: [
     OrderService,

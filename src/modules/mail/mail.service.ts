@@ -24,4 +24,22 @@ export class MailService {
       throw new BadRequestException(error);
     }
   }
+
+  async sendForgotPasswordRequest(user: User, token: string) {
+    const url = `http://localhost:3000/api/auth/forgot-password?token=` + token;
+    try {
+      const res = await this.mailerService.sendMail({
+        to: user.email,
+        subject: 'Change your password',
+        template: './forgot-password',
+        context: {
+          name: `${user.firstName} ${user.lastName}`,
+          url,
+        },
+      });
+      console.log(res);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
 }

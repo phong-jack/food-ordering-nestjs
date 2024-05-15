@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
-import { ROLES_META_KEY } from '../constants/auth.constant';
+import { IS_PUBLIC_META_KEY, ROLES_META_KEY } from '../constants/auth.constant';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -9,6 +9,12 @@ export class RoleGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
+    const isPublic = this.reflector.get<boolean>(
+      IS_PUBLIC_META_KEY,
+      context.getHandler(),
+    );
+    if (isPublic) return true;
+
     const roles = this.reflector.get<string[]>(
       ROLES_META_KEY,
       context.getHandler(),

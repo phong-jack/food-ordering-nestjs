@@ -12,6 +12,7 @@ import { TypeORMExceptionFilter } from './common/filters/type-orm-exception.filt
 import { ErrorExceptionsFilter } from './common/filters/error-exeption.filter';
 import { WebsocketExceptionsFilter } from './common/filters/websocket-exception.filter';
 import { RedisIoAdapter } from './common/gateway/redis.adapter';
+import { ValidateExceptionFilter } from './common/filters/validate-exception.filter';
 
 async function bootstrap() {
   const app: NestApplication = await NestFactory.create(AppModule);
@@ -22,7 +23,7 @@ async function bootstrap() {
   //filter
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(
-    new WebsocketExceptionsFilter(),
+    new ValidateExceptionFilter(),
     new TypeORMExceptionFilter(),
     new ErrorExceptionsFilter(),
     new HttpExceptionFilter(),

@@ -15,8 +15,18 @@ export class ProductRepository {
     return await this.productRepository.find();
   }
 
+  async findByShop(shopId: number): Promise<Product[]> {
+    return await this.productRepository.find({
+      relations: { shop: true },
+      where: { shop: { id: shopId } },
+    });
+  }
+
   async findById(id: number): Promise<Product | undefined> {
-    return await this.productRepository.findOne({ where: { id } });
+    return await this.productRepository.findOne({
+      relations: { shop: true },
+      where: { id },
+    });
   }
 
   async createProduct(productCreateDto: ProductCreateDto) {
