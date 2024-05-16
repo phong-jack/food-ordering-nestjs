@@ -5,14 +5,13 @@ import { ProductCreateDto } from '../dtos/product.create.dto';
 import { ProductUpdateDto } from '../dtos/product.update.dto';
 import { BadGatewayException, BadRequestException } from '@nestjs/common';
 import { ProductChangeStatusDto } from '../dtos/product.change-status.dto';
+import { BaseRepositoryAbstract } from 'src/common/base/base.abstract.repository';
 
-export class ProductRepository {
+export class ProductRepository extends BaseRepositoryAbstract<Product> {
   constructor(
     @InjectRepository(Product) private productRepository: Repository<Product>,
-  ) {}
-
-  async findAll(): Promise<Product[]> {
-    return await this.productRepository.find();
+  ) {
+    super(productRepository);
   }
 
   async findByShop(shopId: number): Promise<Product[]> {

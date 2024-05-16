@@ -15,6 +15,7 @@ import { GatewayModule } from './common/gateway/gateway.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SettingModule } from './modules/setting/setting.module';
 import { CaslModule } from './modules/casl/casl.module';
+import { GeocodingModule } from './modules/geocoding/geocoding.module';
 
 @Module({
   imports: [
@@ -43,16 +44,17 @@ import { CaslModule } from './modules/casl/casl.module';
       store: memoryStore,
     }),
     EventEmitterModule.forRoot({ global: true }),
-    UserModule,
-    AuthModule,
     ShopModule,
     MailModule,
-    OrderModule,
     ProductModule,
     CacheMemoryModule,
     ChatModule,
     GatewayModule,
     SettingModule,
+    GeocodingModule,
+    OrderModule,
+    UserModule,
+    AuthModule,
     CaslModule,
   ],
 })

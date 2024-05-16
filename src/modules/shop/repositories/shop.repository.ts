@@ -1,38 +1,63 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Shop } from '../entities/Shop';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Repository } from 'typeorm';
 import { ShopCreateDto } from '../dtos/shop.create.dto';
 import { ShopUpdateDto } from '../dtos/shop.update.dto';
 import { BadRequestException } from '@nestjs/common';
+import { BaseRepositoryAbstract } from 'src/common/base/base.abstract.repository';
+import { Geometry } from 'src/modules/geocoding/interfaces/geocoding.response';
 
-export class ShopRepository {
+export class ShopRepository extends BaseRepositoryAbstract<Shop> {
   constructor(
     @InjectRepository(Shop) private shopRepository: Repository<Shop>,
-  ) {}
-
-  async findAll(): Promise<Shop[]> {
-    return await this.shopRepository.find();
+  ) {
+    super(shopRepository);
   }
 
-  async findOneById(id: number): Promise<Shop> {
-    return await this.shopRepository.findOne({ where: { id: id } });
+  async findAllByDistance(
+    userLocate: Geometry,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<[Shop[], number]> {
+    const query = this.shopRepository
+      .createQueryBuilder('shop')
+      .leftJoinAndSelect('shop.locate', 'locate')
+      .addSelect(
+        `(
+      6371 * acos(
+        cos(radians(:userLatitude)) *
+        cos(radians(locate.lat)) *
+        cos(radians(locate.lng) - radians(:userLongitude)) +
+        sin(radians(:userLatitude)) *
+        sin(radians(locate.lng))
+      )
+    )`,
+        'distance',
+      )
+      .setParameters({
+        userLatitude: userLocate.lat,
+        userLongitude: userLocate.lng,
+      })
+      .where('locate.lat IS NOT NULL AND locate.lng IS NOT NULL')
+      .orderBy('distance', 'ASC')
+      .take(limit)
+      .skip((page - 1) * limit);
+
+    const [shops, count] = await query.getManyAndCount();
+    return [shops, count];
   }
 
-  async createShop(shopCreateDto: ShopCreateDto): Promise<Shop> {
-    const newShop = await this.shopRepository.create(shopCreateDto);
-    return await this.shopRepository.save(newShop);
-  }
-
-  async updateShop(id: number, shopUpdateDto: ShopUpdateDto): Promise<Shop> {
-    const user = await this.shopRepository.findBy({ id });
+  async updateShopLocate(id: number, address: string, locateId: number) {
+    const user = await this.findOneById(id);
     if (!user) throw new BadRequestException('Shop not found!');
-    await this.shopRepository.save({ id, ...shopUpdateDto });
-    return await this.findOneById(id);
-  }
-
-  async deleteShop(id: number): Promise<void> {
-    const shop = await this.findOneById(id);
-    if (!shop) throw new BadRequestException('Shop not found!');
-    await this.shopRepository.delete(id);
+    await this.shopRepository.save({
+      id,
+      address: address,
+      locate: { id: locateId },
+    });
+    return await this.shopRepository.findOne({
+      relations: { locate: true },
+      where: { id: id },
+    });
   }
 }

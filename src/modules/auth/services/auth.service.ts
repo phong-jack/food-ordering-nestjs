@@ -8,6 +8,9 @@ import { MailService } from 'src/modules/mail/mail.service';
 import { SendMailDto } from 'src/modules/mail/dtos/mail.send-mail.dto';
 import { ChangePasswordDto } from '../dtos/auth.change-password.dto';
 import { ForgotPasswordDto } from '../dtos/auth.forgot-password.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UserCreateEventDto } from 'src/common/events/dtos/user-create.event.dto';
+import { SETTING_KEY } from 'src/modules/setting/constants/setting.constant';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +18,7 @@ export class AuthService {
     private userService: UserService,
     private jwtService: JwtService,
     private mailService: MailService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async signUp(userCreateDto: UserCreateDto) {
@@ -43,6 +47,15 @@ export class AuthService {
     await this.mailService.sendUserConfirmation(
       sendMailDto.user,
       sendMailDto.token,
+    );
+
+    this.eventEmitter.emit(
+      'user.create',
+      new UserCreateEventDto({
+        key: SETTING_KEY.TIME_ZONE,
+        value: new Date().getTimezoneOffset().toString(),
+        userId: newUser.id,
+      }),
     );
 
     return {

@@ -18,6 +18,7 @@ export class ErrorExceptionsFilter implements ExceptionFilter {
       message: message,
       timestamp: new Date().toISOString(),
       path: ctx.getRequest().url,
+      stack: exception.stack,
     });
   }
 }

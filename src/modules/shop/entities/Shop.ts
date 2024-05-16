@@ -1,5 +1,14 @@
 import { faker } from '@faker-js/faker';
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Locate } from 'src/modules/geocoding/entities/Locate';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  Relation,
+} from 'typeorm';
 
 @Entity({ name: 'shop' })
 export class Shop extends BaseEntity {
@@ -20,4 +29,8 @@ export class Shop extends BaseEntity {
 
   @Column({ default: false })
   isWorking: boolean;
+
+  @OneToOne(() => Locate)
+  @JoinColumn({ name: 'locateId' })
+  locate: Relation<Locate>;
 }

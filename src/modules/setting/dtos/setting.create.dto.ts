@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { SETTING_KEY } from '../constants/setting.constant';
+import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
-export class SettingUpdateDto {
+export class SettingCreateDto {
   @ApiProperty({
     example: SETTING_KEY.TIME_ZONE,
     required: true,
@@ -18,4 +18,10 @@ export class SettingUpdateDto {
   @IsString()
   @IsNotEmpty()
   value: string;
+
+  @ApiProperty({
+    example: 1,
+    required: true,
+  })
+  userId: number;
 }

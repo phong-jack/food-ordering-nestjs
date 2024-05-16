@@ -3,6 +3,7 @@ import { SettingRepository } from '../repositories/setting.repository';
 import { Setting } from '../entities/setting.entity';
 import { SETTING_KEY } from '../constants/setting.constant';
 import { SettingUpdateDto } from '../dtos/setting.update.dto';
+import { SettingCreateDto } from '../dtos/setting.create.dto';
 
 @Injectable()
 export class SettingService {
@@ -14,6 +15,10 @@ export class SettingService {
 
   async findById(id: number): Promise<Setting> {
     return await this.settingRepository.findById(id);
+  }
+
+  async createSetting(settingCreateDto: SettingCreateDto) {
+    return await this.settingRepository.create(settingCreateDto);
   }
 
   async findByUser(userId: number): Promise<Setting[]> {
