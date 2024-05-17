@@ -19,7 +19,7 @@ export class Locate {
   @Column({ nullable: false, type: 'double' })
   lng: number;
 
-  @OneToOne(() => Shop)
+  @OneToOne(() => Shop, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'shopId' })
   shop: Relation<Shop>;
 }

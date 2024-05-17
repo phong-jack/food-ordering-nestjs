@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { UserModule } from './modules/user/user.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module';
 import { ShopModule } from './modules/shop/shop.module';
@@ -17,8 +17,8 @@ import { SettingModule } from './modules/setting/setting.module';
 import { CaslModule } from './modules/casl/casl.module';
 import { GeocodingModule } from './modules/geocoding/geocoding.module';
 import { FetchModule } from './common/fetch/fetch.module';
-import { ScheduleModule } from '@nestjs/schedule';
 import { CronModule } from './common/cron/cron.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -46,6 +46,15 @@ import { CronModule } from './common/cron/cron.module';
       ttl: 5,
       max: 10,
       store: memoryStore,
+    }),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        connection: {
+          host: configService.get('REDIS_HOST'),
+          port: configService.get('REDIS_PORT'),
+        },
+      }),
     }),
     EventEmitterModule.forRoot({ global: true }),
     ShopModule,

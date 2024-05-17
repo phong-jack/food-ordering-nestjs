@@ -11,7 +11,6 @@ export class ShopUpsertDto extends PartialType(ShopUpdateDto) {
   @IsNotEmpty()
   id: number;
 
-  @ApiProperty({ required: true })
   @IsNumber()
   @IsNotEmpty()
   lat?: number;

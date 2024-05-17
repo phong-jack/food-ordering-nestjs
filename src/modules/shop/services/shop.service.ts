@@ -11,7 +11,8 @@ import {
 import { LocateService } from 'src/modules/geocoding/service/locate.service';
 import { UserService } from 'src/modules/user/services/user/user.service';
 import { ShopUpsertDto } from '../dtos/shop.upsert.dto';
-import { InsertResult } from 'typeorm';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class ShopService {
@@ -20,6 +21,8 @@ export class ShopService {
     private geocodingSerivce: GeocodingService,
     private locateService: LocateService,
     private userService: UserService,
+    @InjectQueue('shop')
+    private shopQueue: Queue,
   ) {}
 
   async findAll(): Promise<Shop[]> {
@@ -54,6 +57,8 @@ export class ShopService {
       id,
       place.geometry,
     );
+
+    console.log('Goi geocode service:: ', new Date().toTimeString());
     const shopUpdated = await this.shopRepository.updateShopLocate(
       id,
       address,
@@ -62,12 +67,12 @@ export class ShopService {
     return shopUpdated;
   }
 
-  async findShopByDistance(userId: number) {
+  async findShopByDistance(userId: number, page: number, limit: number) {
     const user = await this.userService.findById(userId);
     const place: GeocodingReponse = await this.geocodingSerivce.findByAddress(
       user.address,
     );
-
+    console.log('check userplace:: ', place);
     const userLocate = place.geometry;
     const [shops, count] =
       await this.shopRepository.findAllByDistance(userLocate);
@@ -78,17 +83,28 @@ export class ShopService {
     };
   }
 
-  async upsertShop(shopUpsertDto: ShopUpsertDto): Promise<Shop> {
-    const locate = await this.locateService.updateLocateByShop(
-      shopUpsertDto.id,
-      { lat: shopUpsertDto.lat, lng: shopUpsertDto.lng },
-    );
-    await this.shopRepository.updateShopLocate(
-      shopUpsertDto.id,
-      shopUpsertDto.address,
-      locate.id,
-    );
-    const upsertedShop = await this.shopRepository.upsertShop(shopUpsertDto);
+  async upsert(shopUpsertDto: ShopUpsertDto) {
+    const upsertedShop = await this.shopRepository.upsert(shopUpsertDto);
     return upsertedShop;
+  }
+
+  // async upsertShop(shopUpsertDto: ShopUpsertDto): Promise<Shop> {
+  //   const upsertedShop = await this.shopRepository.upsertShop(shopUpsertDto);
+  //   const locate = await this.locateService.updateLocateByShop(
+  //     shopUpsertDto.id,
+  //     { lat: shopUpsertDto.lat, lng: shopUpsertDto.lng },
+  //   );
+  //   await this.shopRepository.updateShopLocate(
+  //     shopUpsertDto.id,
+  //     shopUpsertDto.address,
+  //     locate?.id,
+  //   );
+  //   return upsertedShop;
+  // }
+
+  async upsertShop(shopUpsertDto: ShopUpsertDto) {
+    await this.shopQueue.add('shop-upsert', shopUpsertDto, { delay: 1000 });
+
+    return;
   }
 }

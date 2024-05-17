@@ -9,7 +9,8 @@ export class CronService {
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async handleFetchShopData() {
-    await this.fetchService.fetchShopData(1, 100);
-    this.logger.debug('Called when the current ?');
+    // await this.fetchService.fetchShopData();
+
+    this.logger.log('Run');
   }
 }

@@ -30,7 +30,7 @@ export class ShopRepository extends BaseRepositoryAbstract<Shop> {
         cos(radians(locate.lat)) *
         cos(radians(locate.lng) - radians(:userLongitude)) +
         sin(radians(:userLatitude)) *
-        sin(radians(locate.lng))
+        sin(radians(locate.lat))
       )
     )`,
         'distance',
@@ -45,6 +45,13 @@ export class ShopRepository extends BaseRepositoryAbstract<Shop> {
       .skip((page - 1) * limit);
 
     const [shops, count] = await query.getManyAndCount();
+    console.log('CHECK: SHOP:: ', shops);
+    shops.forEach((shop) => {
+      console.log(
+        `Shop ID: ${shop.id}, Quan:: ${shop.name} , dia chi::  ${shop.address}, Distance: ${shop['distance']}`,
+      );
+    });
+
     return [shops, count];
   }
 
@@ -62,7 +69,7 @@ export class ShopRepository extends BaseRepositoryAbstract<Shop> {
     });
   }
 
-  async upsertShop(shopUpsertDto: ShopUpsertDto): Promise<Shop> {
+  async upsert(shopUpsertDto: ShopUpsertDto): Promise<Shop> {
     const upsert = await this.shopRepository.upsert(shopUpsertDto, ['id']);
     const id = upsert.identifiers[0]?.id;
     if (!id) throw new Error('Error upsert shop ');

@@ -9,12 +9,13 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   Req,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ShopService } from '../services/shop.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CustomResponse } from 'src/common/decorators/custom-response.interceptor';
 import { ShopCreateDto } from '../dtos/shop.create.dto';
 import { ShopUpdateDto } from '../dtos/shop.update.dto';
@@ -40,6 +41,7 @@ import { Request } from 'express';
 import { RoleGuard } from 'src/modules/auth/guards/role.guard';
 import { Roles } from 'src/modules/auth/decorators/roles.decorator';
 import { UserRole } from 'src/modules/user/constants/user.enum';
+import { PaginateDto } from '../dtos/paginate.dto';
 
 @UseGuards(AccessTokenGuard)
 @ApiBearerAuth()
@@ -60,13 +62,19 @@ export class ShopController {
     return await this.shopService.findAll();
   }
 
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
   @UseGuards(RoleGuard, PoliciesGuard)
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, Shop))
   @Roles(UserRole.USER)
   @Get('find-distance')
-  async findShopByDistance(@Req() req) {
+  async findShopByDistance(
+    @Req() req,
+    @Query('page', ParseIntPipe) page: number,
+    @Query('limit', ParseIntPipe) limit: number,
+  ) {
     const userId = req.user['sub'];
-    return await this.shopService.findShopByDistance(userId);
+    return await this.shopService.findShopByDistance(userId, page, limit);
   }
 
   @Public()

@@ -16,13 +16,10 @@ export class FetchService {
     private readonly shopService: ShopService,
   ) {}
 
-  async fetchShopData(
-    page: number = 1,
-    count: number = 100,
-  ): Promise<AxiosResponse<any>> {
-    const limit = 20; // items count when fetching
-    let currentPage = page;
-    let fetchedItems = 0;
+  async fetchShopData(): Promise<void> {
+    let page: number = 1;
+    let count: number = 100;
+    let fetchedItems: number = 0;
 
     const fetchOptions: IFetchShop = {
       CityId: CITY_ID.HUE,
@@ -31,32 +28,45 @@ export class FetchService {
       type: 1,
     };
 
-    while (fetchedItems < count) {
-      const url = `https://www.foody.vn/__get/Place/HomeListPlace?page=${fetchOptions.page}&count=${fetchOptions.count}&type=${fetchOptions.type}&CityId=${fetchOptions.CityId}`;
+    while (true) {
+      const url = new URL('https://www.foody.vn/__get/Place/HomeListPlace');
+      url.searchParams.set('page', fetchOptions.page.toString());
+      url.searchParams.set('count', fetchOptions.count.toString());
+      url.searchParams.set('type', fetchOptions.type.toString());
+      url.searchParams.set('CityId', fetchOptions.CityId.toString());
+
       const headers = {
         'X-Requested-With': 'XMLHttpRequest',
         Cookie: 'flg=vn; floc=218',
       };
 
-      const response = await this.httpService.axiosRef.get(url, {
+      const response = await this.httpService.axiosRef.get(url.toString(), {
         headers: headers,
       });
       await this.upsertShopData(response.data.Items as IShopResonse[]);
-      return response.data.Items;
+
+      fetchedItems = fetchedItems + response.data.Items.length;
+      fetchOptions.page++;
+      console.log(fetchOptions.page);
+      if (fetchedItems >= response.data.Total) {
+        console.log('Check items page:: ', fetchedItems);
+        console.log('Check opion page:: ', response.data.Total);
+        break;
+      }
     }
   }
 
   async upsertShopData(shops: IShopResonse[]) {
     shops.map(async (shop) => {
-      const upsertShop = await this.shopService.upsertShop({
+      await this.shopService.upsertShop({
         id: shop.Id,
         name: shop.Name,
         address: shop.Address,
         image: shop.PhotoUrl,
-        isWorking: Boolean(0),
+        isWorking: Boolean(shop.RestaurantStatus),
         phone: shop.Phone,
-        lat: shop.Latitude,
-        lng: shop.Longitude,
+        lat: shop?.Latitude,
+        lng: shop?.Longitude,
       });
     });
   }
