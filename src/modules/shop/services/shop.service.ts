@@ -10,6 +10,8 @@ import {
 } from 'src/modules/geocoding/interfaces/geocoding.response';
 import { LocateService } from 'src/modules/geocoding/service/locate.service';
 import { UserService } from 'src/modules/user/services/user/user.service';
+import { ShopUpsertDto } from '../dtos/shop.upsert.dto';
+import { InsertResult } from 'typeorm';
 
 @Injectable()
 export class ShopService {
@@ -74,5 +76,19 @@ export class ShopService {
       shops,
       count,
     };
+  }
+
+  async upsertShop(shopUpsertDto: ShopUpsertDto): Promise<Shop> {
+    const locate = await this.locateService.updateLocateByShop(
+      shopUpsertDto.id,
+      { lat: shopUpsertDto.lat, lng: shopUpsertDto.lng },
+    );
+    await this.shopRepository.updateShopLocate(
+      shopUpsertDto.id,
+      shopUpsertDto.address,
+      locate.id,
+    );
+    const upsertedShop = await this.shopRepository.upsertShop(shopUpsertDto);
+    return upsertedShop;
   }
 }

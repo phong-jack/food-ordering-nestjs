@@ -16,6 +16,9 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SettingModule } from './modules/setting/setting.module';
 import { CaslModule } from './modules/casl/casl.module';
 import { GeocodingModule } from './modules/geocoding/geocoding.module';
+import { FetchModule } from './common/fetch/fetch.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { CronModule } from './common/cron/cron.module';
 
 @Module({
   imports: [
@@ -35,6 +38,7 @@ import { GeocodingModule } from './modules/geocoding/geocoding.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
         autoLoadEntities: true,
+        cache: false,
       }),
     }),
     CacheModule.register({
@@ -56,6 +60,8 @@ import { GeocodingModule } from './modules/geocoding/geocoding.module';
     UserModule,
     AuthModule,
     CaslModule,
+    FetchModule,
+    CronModule,
   ],
 })
 export class AppModule {}

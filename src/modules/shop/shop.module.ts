@@ -18,5 +18,6 @@ import { UserModule } from '../user/user.module';
   ],
   providers: [ShopService, ShopRepository],
   controllers: [ShopController],
+  exports: [ShopService],
 })
 export class ShopModule {}
