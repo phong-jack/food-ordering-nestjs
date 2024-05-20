@@ -1,23 +1,27 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import opencage from 'opencage-api-client';
 import { GeocodingReponse } from '../interfaces/geocoding.response';
 
 @Injectable()
 export class GeocodingService {
   async findByAddress(address: string): Promise<GeocodingReponse> {
-    const response = await opencage.geocode({ q: address, language: 'vn' });
-    const { results } = response;
-    const place = results[0];
+    try {
+      const response = await opencage.geocode({ q: address, language: 'vn' });
+      const { results } = response;
+      const place = results[0];
 
-    const placeObj: GeocodingReponse = {
-      name: `${place.formatted}`,
-      geometry: place.geometry,
-      road: place.components.road,
-      suburb: place.components.suburb,
-      city: place.components.city,
-      country: place.components.country,
-    };
-    return placeObj;
+      const placeObj: GeocodingReponse = {
+        name: `${place.formatted}`,
+        geometry: place.geometry,
+        road: place.components.road,
+        suburb: place.components.suburb,
+        city: place.components.city,
+        country: place.components.country,
+      };
+      return placeObj;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   getDistanceFromLatLonInKm(

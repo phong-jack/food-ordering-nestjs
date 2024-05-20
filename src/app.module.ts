@@ -56,6 +56,7 @@ import { BullModule } from '@nestjs/bullmq';
         },
       }),
     }),
+
     EventEmitterModule.forRoot({ global: true }),
     ShopModule,
     MailModule,

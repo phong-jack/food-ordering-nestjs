@@ -12,23 +12,34 @@ import { TypeORMExceptionFilter } from './common/filters/type-orm-exception.filt
 import { ErrorExceptionsFilter } from './common/filters/error-exeption.filter';
 import { WebsocketExceptionsFilter } from './common/filters/websocket-exception.filter';
 import { RedisIoAdapter } from './common/gateway/redis.adapter';
-import { ValidateExceptionFilter } from './common/filters/validate-exception.filter';
+import { SentryFilter } from './common/filters/sentry-exeption.filter';
+import * as Sentry from '@sentry/node';
+import { SentryInterceptor } from './common/interceptors/sentry.interceptor';
 
 async function bootstrap() {
   const app: NestApplication = await NestFactory.create(AppModule);
 
+  Sentry.init({
+    dsn: process.env.SENTRY_DNS,
+    environment: process.env.ENV || 'development',
+    serverName: 'localhost',
+    tracesSampleRate: 1.0,
+    // enabled:
+  });
+
   app.setGlobalPrefix('/api');
   await swaggerInit(app);
-
+  const { httpAdapter } = app.get(HttpAdapterHost);
   //filter
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(
-    new ValidateExceptionFilter(),
+    new SentryFilter(httpAdapter),
     new TypeORMExceptionFilter(),
     new ErrorExceptionsFilter(),
     new HttpExceptionFilter(),
   );
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalInterceptors(new SentryInterceptor());
 
   const redisIoAdapter = new RedisIoAdapter(app);
   await redisIoAdapter.connectToRedis();

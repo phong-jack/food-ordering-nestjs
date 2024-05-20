@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ShopRepository } from '../repositories/shop.repository';
 import { Shop } from '../entities/Shop';
 import { ShopUpdateDto } from '../dtos/shop.update.dto';
@@ -58,7 +58,10 @@ export class ShopService {
       place.geometry,
     );
 
-    console.log('Goi geocode service:: ', new Date().toTimeString());
+    if (!locate) {
+      throw new BadRequestException('Locate can not null');
+    }
+
     const shopUpdated = await this.shopRepository.updateShopLocate(
       id,
       address,
@@ -72,10 +75,12 @@ export class ShopService {
     const place: GeocodingReponse = await this.geocodingSerivce.findByAddress(
       user.address,
     );
-    console.log('check userplace:: ', place);
     const userLocate = place.geometry;
-    const [shops, count] =
-      await this.shopRepository.findAllByDistance(userLocate);
+    const [shops, count] = await this.shopRepository.findAllByDistance(
+      userLocate,
+      page,
+      limit,
+    );
 
     return {
       shops,

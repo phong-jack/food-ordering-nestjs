@@ -5,7 +5,7 @@ export interface IFetchShop {
   CityId: number;
 }
 
-export interface IShopResonse {
+export interface IShopResponse {
   Id: number;
   Name: string;
   Address: string;
@@ -14,11 +14,11 @@ export interface IShopResonse {
   RestaurantStatus: number;
   Phone: string;
   PhotoUrl: string;
-  TotalReviews: 72;
-  TotalFavourites: 0;
-  TotalViews: 0;
-  TotalPictures: 972;
-  TotalCheckIns: 0;
+  TotalReviews: number;
+  TotalFavourites: number;
+  TotalViews: number;
+  TotalPictures: number;
+  TotalCheckIns: number;
   Latitude: number;
   Longitude: number;
 }
