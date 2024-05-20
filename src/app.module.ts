@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { UserModule } from './modules/user/user.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module';
 import { ShopModule } from './modules/shop/shop.module';
@@ -16,6 +16,9 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SettingModule } from './modules/setting/setting.module';
 import { CaslModule } from './modules/casl/casl.module';
 import { GeocodingModule } from './modules/geocoding/geocoding.module';
+import { FetchModule } from './common/fetch/fetch.module';
+import { CronModule } from './common/cron/cron.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -35,6 +38,7 @@ import { GeocodingModule } from './modules/geocoding/geocoding.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
         autoLoadEntities: true,
+        cache: false,
       }),
     }),
     CacheModule.register({
@@ -43,6 +47,16 @@ import { GeocodingModule } from './modules/geocoding/geocoding.module';
       max: 10,
       store: memoryStore,
     }),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        connection: {
+          host: configService.get('REDIS_HOST'),
+          port: configService.get('REDIS_PORT'),
+        },
+      }),
+    }),
+
     EventEmitterModule.forRoot({ global: true }),
     ShopModule,
     MailModule,
@@ -56,6 +70,8 @@ import { GeocodingModule } from './modules/geocoding/geocoding.module';
     UserModule,
     AuthModule,
     CaslModule,
+    FetchModule,
+    CronModule,
   ],
 })
 export class AppModule {}

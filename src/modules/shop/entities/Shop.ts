@@ -8,9 +8,12 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
+  Unique,
 } from 'typeorm';
 
 @Entity({ name: 'shop' })
+@Unique('unique_name', ['name'])
+@Unique('unique_shop', ['name', 'address', 'phone'])
 export class Shop extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;

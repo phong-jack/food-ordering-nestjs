@@ -6,6 +6,7 @@ import { ShopUpdateDto } from '../dtos/shop.update.dto';
 import { BadRequestException } from '@nestjs/common';
 import { BaseRepositoryAbstract } from 'src/common/base/base.abstract.repository';
 import { Geometry } from 'src/modules/geocoding/interfaces/geocoding.response';
+import { ShopUpsertDto } from '../dtos/shop.upsert.dto';
 
 export class ShopRepository extends BaseRepositoryAbstract<Shop> {
   constructor(
@@ -29,7 +30,7 @@ export class ShopRepository extends BaseRepositoryAbstract<Shop> {
         cos(radians(locate.lat)) *
         cos(radians(locate.lng) - radians(:userLongitude)) +
         sin(radians(:userLatitude)) *
-        sin(radians(locate.lng))
+        sin(radians(locate.lat))
       )
     )`,
         'distance',
@@ -44,12 +45,19 @@ export class ShopRepository extends BaseRepositoryAbstract<Shop> {
       .skip((page - 1) * limit);
 
     const [shops, count] = await query.getManyAndCount();
+    console.log('CHECK: SHOP:: ', shops);
+    shops.forEach((shop) => {
+      console.log(
+        `Shop ID: ${shop.id}, Quan:: ${shop.name} , dia chi::  ${shop.address}, Distance: ${shop['distance']}`,
+      );
+    });
+
     return [shops, count];
   }
 
   async updateShopLocate(id: number, address: string, locateId: number) {
-    const user = await this.findOneById(id);
-    if (!user) throw new BadRequestException('Shop not found!');
+    const shop = await this.findOneById(id);
+    if (!shop) throw new BadRequestException('Shop not found!');
     await this.shopRepository.save({
       id,
       address: address,
@@ -59,5 +67,13 @@ export class ShopRepository extends BaseRepositoryAbstract<Shop> {
       relations: { locate: true },
       where: { id: id },
     });
+  }
+
+  async upsert(shopUpsertDto: ShopUpsertDto): Promise<Shop> {
+    const upsert = await this.shopRepository.upsert(shopUpsertDto, ['id']);
+    const id = upsert.identifiers[0]?.id;
+    if (!id) throw new Error('Error upsert shop ');
+    const shopUpseted = await this.findOneById(id);
+    return shopUpseted;
   }
 }

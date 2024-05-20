@@ -7,6 +7,8 @@ import { ShopController } from './controllers/shop.controller';
 import { CaslModule } from '../casl/casl.module';
 import { GeocodingModule } from '../geocoding/geocoding.module';
 import { UserModule } from '../user/user.module';
+import { BullModule } from '@nestjs/bullmq';
+import { ShopProcessor } from './queues/shop.processor';
 
 @Module({
   imports: [
@@ -15,8 +17,12 @@ import { UserModule } from '../user/user.module';
     CaslModule,
     GeocodingModule,
     UserModule,
+    BullModule.registerQueue({
+      name: 'shop',
+    }),
   ],
-  providers: [ShopService, ShopRepository],
+  providers: [ShopService, ShopRepository, ShopProcessor],
   controllers: [ShopController],
+  exports: [ShopService],
 })
 export class ShopModule {}
