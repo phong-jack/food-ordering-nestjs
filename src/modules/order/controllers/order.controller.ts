@@ -7,11 +7,14 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
   UseInterceptors,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { OrderService } from '../services/order.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { OrderCreateDto } from '../dtos/order.create.dto';
 import { CustomResponse } from 'src/common/decorators/custom-response.interceptor';
 import { OrderChangeStatusDto } from '../dtos/order.change-status.dto';
@@ -26,6 +29,7 @@ import { CheckPolicies } from 'src/modules/casl/decorators/casl.decorator';
 import { Order } from '../entities/order.entity';
 import { Action } from 'src/modules/casl/constants/casl.constant';
 import { AppAbility } from 'src/modules/casl/casl-ability.factory';
+import { PoliciesGuard } from 'src/modules/casl/guards/policy.guard';
 
 @UseGuards(AccessTokenGuard, RoleGuard)
 @ApiBearerAuth()
@@ -63,5 +67,21 @@ export class OrderController {
     @Body() orderChangeStatusDto: OrderChangeStatusDto,
   ) {
     return await this.orderService.changeStatus(id, orderChangeStatusDto);
+  }
+
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, Order))
+  @Roles(UserRole.SHOP)
+  @CustomResponse({
+    message: 'Get report success',
+    statusCode: HttpStatus.OK,
+  })
+  @Get('report/:shopId')
+  async reportOrderByDate(
+    @Param('shopId') shopId: number,
+    @Query('dateStart') date1: string,
+    @Query('dateEnd') date2: string,
+  ) {
+    return await this.orderService.statisticsOrderByDay(shopId, date1, date2);
   }
 }

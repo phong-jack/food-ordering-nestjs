@@ -1,14 +1,17 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OrderStatus } from '../entities/order-status.entity';
+import { BaseRepositoryAbstract } from 'src/common/base/base.abstract.repository';
 
-export class OrderStatusRepository {
+export class OrderStatusRepository extends BaseRepositoryAbstract<OrderStatus> {
   constructor(
     @InjectRepository(OrderStatus)
-    private orderStatusRepository: Repository<OrderStatus>,
-  ) {}
+    private orderRepository: Repository<OrderStatus>,
+  ) {
+    super(orderRepository);
+  }
 
-  async findAll(): Promise<OrderStatus[]> {
-    return await this.orderStatusRepository.find();
+  createOne() {
+    console.log('heleo world');
   }
 }

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { OrderDetailRepository } from '../repositories/order-detail.repository';
 import { OrderDetailCreateDto } from '../dtos/order-detail.create.dto';
+import { FindOneOptions } from 'typeorm';
+import { OrderDetail } from '../entities/order-detail.entity';
 
 @Injectable()
 export class OrderDetailService {
@@ -14,5 +16,10 @@ export class OrderDetailService {
       orderId,
       orderDetailCreateDto,
     );
+  }
+
+  async getOrderDetails(orderId: number): Promise<OrderDetail[]> {
+    const orderDetails = await this.orderDetailRepository.findByOrder(orderId);
+    return orderDetails;
   }
 }

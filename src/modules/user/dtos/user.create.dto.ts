@@ -59,4 +59,6 @@ export class UserCreateDto {
 
   @ApiProperty({ enum: UserRole, default: UserRole.USER })
   readonly role: UserRole;
+
+  shopId?: number;
 }

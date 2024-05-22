@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ProductRepository } from '../repositories/product.repository';
 import { ProductCreateDto } from '../dtos/product.create.dto';
 import { ProductUpdateDto } from '../dtos/product.update.dto';
 import { Product } from '../entities/product.entity';
 import { ProductChangeStatusDto } from '../dtos/product.change-status.dto';
+import { FindOneOptions, FindOptions, FindOptionsWhere } from 'typeorm';
 
 @Injectable()
 export class ProductService {
@@ -22,7 +23,7 @@ export class ProductService {
   }
 
   async createProduct(productCreateDto: ProductCreateDto): Promise<Product> {
-    return await this.productRepository.createProduct(productCreateDto);
+    return await this.productRepository.create(productCreateDto);
   }
 
   async updateProduct(
@@ -33,7 +34,7 @@ export class ProductService {
   }
 
   async deleteProduct(id: number): Promise<void> {
-    await this.productRepository.deleteProduct(id);
+    await this.productRepository.delete(id);
   }
 
   async changeStatusProduct(

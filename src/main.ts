@@ -31,7 +31,7 @@ async function bootstrap() {
   await swaggerInit(app);
   const { httpAdapter } = app.get(HttpAdapterHost);
   //filter
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalFilters(
     new SentryFilter(httpAdapter),
     new TypeORMExceptionFilter(),

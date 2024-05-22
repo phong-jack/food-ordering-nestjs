@@ -9,6 +9,7 @@ import { GeocodingModule } from '../geocoding/geocoding.module';
 import { UserModule } from '../user/user.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ShopProcessor } from './queues/shop.processor';
+import { QueueName } from 'src/common/constants/queue.constant';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { ShopProcessor } from './queues/shop.processor';
     GeocodingModule,
     UserModule,
     BullModule.registerQueue({
-      name: 'shop',
+      name: QueueName.SHOP,
     }),
   ],
   providers: [ShopService, ShopRepository, ShopProcessor],

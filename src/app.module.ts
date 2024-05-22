@@ -19,6 +19,7 @@ import { GeocodingModule } from './modules/geocoding/geocoding.module';
 import { FetchModule } from './common/fetch/fetch.module';
 import { CronModule } from './common/cron/cron.module';
 import { BullModule } from '@nestjs/bullmq';
+import { MigrationModule } from './migrations/migration.module';
 
 @Module({
   imports: [
@@ -56,7 +57,7 @@ import { BullModule } from '@nestjs/bullmq';
         },
       }),
     }),
-
+    MigrationModule,
     EventEmitterModule.forRoot({ global: true }),
     ShopModule,
     MailModule,
