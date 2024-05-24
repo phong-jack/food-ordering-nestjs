@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { UserCreateDto } from 'src/modules/user/dtos/user.create.dto';
 import { UserService } from 'src/modules/user/services/user/user.service';
-import argon2 from 'argon2';
+import argon2, { hash } from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { SignInDto } from '../dtos/auth.sign-in.dto';
 import { MailService } from 'src/modules/mail/mail.service';
@@ -29,7 +29,7 @@ export class AuthService {
       throw new BadRequestException('This username already exist');
     }
     const hashPassword = await this.hashData(userCreateDto.password);
-    const newUser = await this.userService.createUser({
+    const newUser = await this.userService.create({
       ...userCreateDto,
       password: hashPassword,
     });
@@ -127,8 +127,8 @@ export class AuthService {
     );
   }
 
-  private hashData(data: string) {
-    return argon2.hash(data);
+  hashData(data: string) {
+    return hash(data);
   }
 
   async getMailToken(userId: number, username: string) {

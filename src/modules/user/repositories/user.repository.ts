@@ -3,11 +3,14 @@ import { User } from '../entities/user.entity';
 import { DeleteResult, FindOptionsWhere, Repository } from 'typeorm';
 import { UserCreateDto } from '../dtos/user.create.dto';
 import { UserUpdateDto } from '../dtos/user.update.dto';
+import { BaseRepositoryAbstract } from 'src/common/base/base.abstract.repository';
 
-export class UserRepository {
+export class UserRepository extends BaseRepositoryAbstract<User> {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
-  ) {}
+  ) {
+    super(userRepository);
+  }
 
   async findAll(): Promise<User[]> {
     return await this.userRepository.find();
@@ -40,8 +43,11 @@ export class UserRepository {
     });
   }
 
-  async createUser(userCreateDto: UserCreateDto): Promise<User> {
-    const newUser = await this.userRepository.create(userCreateDto);
+  async create(userCreateDto: UserCreateDto): Promise<User> {
+    const newUser = await this.userRepository.create({
+      ...userCreateDto,
+      shop: { id: userCreateDto?.shopId || null },
+    });
     return await this.userRepository.save(newUser);
   }
 

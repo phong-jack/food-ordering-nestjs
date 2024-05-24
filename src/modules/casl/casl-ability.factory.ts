@@ -36,6 +36,7 @@ export class CaslAbilityFactory {
 
     if (user?.shopId === shopId) {
       can(Action.Update, Shop);
+      can(Action.Read, Order);
     } else {
       can(Action.Read, Shop);
     }

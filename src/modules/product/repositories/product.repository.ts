@@ -28,7 +28,7 @@ export class ProductRepository extends BaseRepositoryAbstract<Product> {
     });
   }
 
-  async createProduct(productCreateDto: ProductCreateDto) {
+  async create(productCreateDto: ProductCreateDto) {
     const productExist = await this.productRepository.findOne({
       relations: { shop: true, category: true },
       where: {
@@ -54,12 +54,6 @@ export class ProductRepository extends BaseRepositoryAbstract<Product> {
     if (!product) throw new BadRequestException('Product not found!');
     await this.productRepository.save({ id, ...productUpdateDto });
     return await this.findById(id);
-  }
-
-  async deleteProduct(id: number): Promise<void> {
-    const product = await this.findById(id);
-    if (!product) throw new BadRequestException('Product not found');
-    await this.productRepository.delete(id);
   }
 
   async changeStatusProduct(

@@ -49,7 +49,7 @@ export class UserController {
   })
   @Post('create')
   async createUser(@Body() userCreateDto: UserCreateDto) {
-    const newUser = this.userService.createUser(userCreateDto);
+    const newUser = this.userService.create(userCreateDto);
     return newUser;
   }
 

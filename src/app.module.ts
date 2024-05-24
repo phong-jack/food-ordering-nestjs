@@ -20,6 +20,7 @@ import { FetchModule } from './common/fetch/fetch.module';
 import { CronModule } from './common/cron/cron.module';
 import { BullModule } from '@nestjs/bullmq';
 import { NotificationModule } from './modules/notification/notification.module';
+import { MigrationModule } from './migrations/migration.module';
 
 @Module({
   imports: [
@@ -57,7 +58,7 @@ import { NotificationModule } from './modules/notification/notification.module';
         },
       }),
     }),
-
+    MigrationModule,
     EventEmitterModule.forRoot({ global: true }),
     ShopModule,
     MailModule,
