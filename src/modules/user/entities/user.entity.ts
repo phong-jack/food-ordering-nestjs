@@ -16,7 +16,7 @@ import { Setting } from 'src/modules/setting/entities/setting.entity';
 @Entity({ name: 'user' })
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
-  id?: number;
+  id: number;
 
   @Column({ nullable: false, length: 50 })
   firstName: string;

@@ -3,6 +3,7 @@ import { UserRepository } from '../../repositories/user.repository';
 import { User } from '../../entities/user.entity';
 import { UserCreateDto } from '../../dtos/user.create.dto';
 import { UserUpdateDto } from '../../dtos/user.update.dto';
+import { FindOneOptions, FindOptionsWhere } from 'typeorm';
 
 @Injectable()
 export class UserService {
@@ -29,6 +30,10 @@ export class UserService {
   async findOneByEmail(email: string): Promise<User> {
     const user = await this.userRepository.findOneByEmail(email);
     return user;
+  }
+
+  async findOneBy(filter: FindOptionsWhere<User>): Promise<User> {
+    return await this.userRepository.findOneBy(filter);
   }
 
   async create(userCreateDto: UserCreateDto): Promise<User> {

@@ -36,6 +36,13 @@ export class UserRepository extends BaseRepositoryAbstract<User> {
     return user;
   }
 
+  async findOneBy(filter: FindOptionsWhere<User>): Promise<User> {
+    return await this.userRepository.findOne({
+      relations: { shop: true },
+      where: filter,
+    });
+  }
+
   async create(userCreateDto: UserCreateDto): Promise<User> {
     const newUser = await this.userRepository.create({
       ...userCreateDto,

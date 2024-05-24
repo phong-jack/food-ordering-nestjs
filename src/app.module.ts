@@ -19,6 +19,7 @@ import { GeocodingModule } from './modules/geocoding/geocoding.module';
 import { FetchModule } from './common/fetch/fetch.module';
 import { CronModule } from './common/cron/cron.module';
 import { BullModule } from '@nestjs/bullmq';
+import { NotificationModule } from './modules/notification/notification.module';
 import { MigrationModule } from './migrations/migration.module';
 
 @Module({
@@ -73,6 +74,7 @@ import { MigrationModule } from './migrations/migration.module';
     CaslModule,
     FetchModule,
     CronModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}
