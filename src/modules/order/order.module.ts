@@ -10,9 +10,11 @@ import { OrderDetailRepository } from './repositories/order-detail.repository';
 import { OrderStatusRepository } from './repositories/order-status.repository';
 import { OrderDetailService } from './services/order-detail.service';
 import { CaslModule } from '../casl/casl.module';
+import { ProductModule } from '../product/product.module';
 
 @Module({
   imports: [
+    ProductModule,
     TypeOrmModule.forFeature([Order, OrderDetail, OrderStatus]),
     TypeOrmModule.forFeature([
       OrderRepository,

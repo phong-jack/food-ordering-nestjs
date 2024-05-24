@@ -15,6 +15,7 @@ import { RedisIoAdapter } from './common/gateway/redis.adapter';
 import { SentryFilter } from './common/filters/sentry-exeption.filter';
 import * as Sentry from '@sentry/node';
 import { SentryInterceptor } from './common/interceptors/sentry.interceptor';
+import * as firebase from 'firebase-admin';
 
 async function bootstrap() {
   const app: NestApplication = await NestFactory.create(AppModule);
@@ -27,6 +28,15 @@ async function bootstrap() {
     // enabled:
   });
 
+  firebase.initializeApp({
+    credential: firebase.credential.cert({
+      projectId: process.env.FIREBASE_PJ_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY,
+    }),
+  });
+
+  app.enableCors({ origin: '*' });
   app.setGlobalPrefix('/api');
   await swaggerInit(app);
   const { httpAdapter } = app.get(HttpAdapterHost);

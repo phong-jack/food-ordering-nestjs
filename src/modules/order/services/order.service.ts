@@ -11,23 +11,36 @@ import { SERVER_EVENTS } from 'src/common/events/constants/events.constant';
 import { Order } from '../entities/order.entity';
 import { OrderChangeStatusDto } from '../dtos/order.change-status.dto';
 import { ORDER_STATUS } from '../constants/order-status.constant';
+import { ProductService } from 'src/modules/product/services/product.service';
 
 @Injectable()
 export class OrderService {
   constructor(
     private orderRepository: OrderRepository,
     private orderDetailService: OrderDetailService,
+    private productService: ProductService,
     private eventEmitter: EventEmitter2,
   ) {}
 
   async createOrder(orderCreateDto: OrderCreateDto) {
+    for (const detail of orderCreateDto.orderDetails) {
+      const product = await this.productService.findById(detail.productId);
+      if (!product) {
+        throw new BadRequestException(
+          'Product not found, Please enter new product',
+        );
+      }
+    }
+
     const order = await this.orderRepository.createOrder(orderCreateDto);
     const orderDetails = await Promise.all(
       orderCreateDto.orderDetails.map((orderDetail) =>
         this.orderDetailService.createOrderDetail(order.id, orderDetail),
       ),
     );
-    this.eventEmitter.emit(SERVER_EVENTS.ORDER_CREATE, order.id);
+
+    this.eventEmitter.emit(SERVER_EVENTS.ORDER_CREATE, order);
+
     return {
       ...order,
       orderDetails,

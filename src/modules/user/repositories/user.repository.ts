@@ -1,6 +1,6 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
-import { DeleteResult, Repository } from 'typeorm';
+import { DeleteResult, FindOptionsWhere, Repository } from 'typeorm';
 import { UserCreateDto } from '../dtos/user.create.dto';
 import { UserUpdateDto } from '../dtos/user.update.dto';
 
@@ -31,6 +31,13 @@ export class UserRepository {
       where: { email: email },
     });
     return user;
+  }
+
+  async findOneBy(filter: FindOptionsWhere<User>): Promise<User> {
+    return await this.userRepository.findOne({
+      relations: { shop: true },
+      where: filter,
+    });
   }
 
   async createUser(userCreateDto: UserCreateDto): Promise<User> {
