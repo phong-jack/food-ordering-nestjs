@@ -4,13 +4,14 @@ import { HttpModule } from '@nestjs/axios';
 import { ShopModule } from 'src/modules/shop/shop.module';
 import { FetchProcessor } from './queues/fetch.processor';
 import { BullModule } from '@nestjs/bullmq';
+import { QueueName } from '../constants/queue.constant';
 
 @Module({
   imports: [
     HttpModule,
     forwardRef(() => ShopModule),
     BullModule.registerQueue({
-      name: 'fetch',
+      name: QueueName.FETCH,
     }),
   ],
   providers: [FetchService, FetchProcessor],

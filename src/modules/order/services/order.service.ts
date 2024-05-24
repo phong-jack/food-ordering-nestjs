@@ -11,12 +11,14 @@ import { SERVER_EVENTS } from 'src/common/events/constants/events.constant';
 import { Order } from '../entities/order.entity';
 import { OrderChangeStatusDto } from '../dtos/order.change-status.dto';
 import { ORDER_STATUS } from '../constants/order-status.constant';
+import { ShopService } from 'src/modules/shop/services/shop.service';
 
 @Injectable()
 export class OrderService {
   constructor(
     private orderRepository: OrderRepository,
     private orderDetailService: OrderDetailService,
+    private shopService: ShopService,
     private eventEmitter: EventEmitter2,
   ) {}
 
@@ -79,5 +81,41 @@ export class OrderService {
     }
 
     return this.orderRepository.changeStatus(id, orderChangeStatusDto);
+  }
+
+  async statisticsOrderByDay(
+    shopId: number,
+    dateStart: string,
+    dateEnd: string,
+  ) {
+    const shop = await this.shopService.findOneById(shopId);
+    if (!shop) throw new BadRequestException('Shop not found!');
+
+    const statisticsByDay = await this.orderRepository.statisticsOrderByDay(
+      shopId,
+      dateStart,
+      dateEnd,
+    );
+
+    let revenue = 0;
+    const statisticPromise = statisticsByDay.orders.map(async (order) => {
+      const orderDetails = await this.orderDetailService.getOrderDetails(
+        order.id,
+      );
+      orderDetails.forEach((orderDetail) => {
+        console.log('check detail: ', orderDetail);
+        console.log('sum: ', orderDetail.quantity * orderDetail.product.price);
+        revenue = revenue + orderDetail.quantity * orderDetail.product.price;
+      });
+    });
+
+    await Promise.all(statisticPromise);
+
+    return {
+      dateStart: dateStart,
+      dateEnd: dateEnd,
+      totalOrders: statisticsByDay.totalOrders,
+      revenue: revenue,
+    };
   }
 }

@@ -10,6 +10,8 @@ import { OrderDetailRepository } from './repositories/order-detail.repository';
 import { OrderStatusRepository } from './repositories/order-status.repository';
 import { OrderDetailService } from './services/order-detail.service';
 import { CaslModule } from '../casl/casl.module';
+import { ShopModule } from '../shop/shop.module';
+import { OrderStatusService } from './services/order-status.service';
 
 @Module({
   imports: [
@@ -20,15 +22,17 @@ import { CaslModule } from '../casl/casl.module';
       OrderStatusRepository,
     ]),
     forwardRef(() => CaslModule),
+    ShopModule,
   ],
   providers: [
-    OrderService,
-    OrderDetailService,
     OrderRepository,
+    OrderService,
     OrderDetailRepository,
+    OrderDetailService,
     OrderStatusRepository,
+    OrderStatusService,
   ],
   controllers: [OrderController],
-  exports: [OrderService],
+  exports: [OrderService, OrderStatusService, OrderDetailService],
 })
 export class OrderModule {}

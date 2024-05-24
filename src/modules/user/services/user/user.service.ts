@@ -31,8 +31,14 @@ export class UserService {
     return user;
   }
 
-  async createUser(userCreateDto: UserCreateDto): Promise<User> {
-    const newUser = await this.userRepository.createUser(userCreateDto);
+  async create(userCreateDto: UserCreateDto): Promise<User> {
+    const userByEmail = await this.findOneByEmail(userCreateDto.email);
+    if (userByEmail) throw new BadRequestException('This email already exist');
+    const userByUserName = await this.findOneByUserName(userCreateDto.username);
+    if (userByUserName)
+      throw new BadRequestException('This username already exist');
+
+    const newUser = await this.userRepository.create(userCreateDto);
     return newUser;
   }
 

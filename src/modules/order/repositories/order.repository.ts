@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Order } from '../entities/order.entity';
 import { BadRequestException } from '@nestjs/common';
 import { OrderCreateDto } from '../dtos/order.create.dto';
@@ -58,5 +58,31 @@ export class OrderRepository {
       id: id,
       orderStatus: { statusCode: statusCode },
     });
+  }
+
+  async statisticsOrderByDay(
+    shopId: number,
+    dateStart: string,
+    dateEnd: string,
+  ) {
+    const startOfDate = new Date(dateStart);
+    startOfDate.setHours(0, 0, 0, 0);
+    const endOfDate = new Date(dateEnd);
+    endOfDate.setHours(23, 59, 59, 999);
+
+    const [orders, totalOrders] = await this.orderRepository.findAndCount({
+      relations: { shop: true, orderDetails: true },
+      where: {
+        shop: { id: shopId },
+        createdAt: Between(startOfDate, endOfDate),
+      },
+    });
+
+    return {
+      dateStart: startOfDate,
+      dateEnd: endOfDate,
+      orders: orders,
+      totalOrders,
+    };
   }
 }
