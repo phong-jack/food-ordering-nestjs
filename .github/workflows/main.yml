@@ -37,4 +37,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/reactjs-basic:${{ github.sha }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/food-ordering:${{ github.sha }}
