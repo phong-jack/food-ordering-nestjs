@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Inject,
   Param,
   ParseIntPipe,
   Patch,
@@ -30,13 +31,17 @@ import { Order } from '../entities/order.entity';
 import { Action } from 'src/modules/casl/constants/casl.constant';
 import { AppAbility } from 'src/modules/casl/casl-ability.factory';
 import { PoliciesGuard } from 'src/modules/casl/guards/policy.guard';
+import { ClientProxy } from '@nestjs/microservices';
 
 @UseGuards(AccessTokenGuard, RoleGuard)
 @ApiBearerAuth()
 @ApiTags('order')
 @Controller('order')
 export class OrderController {
-  constructor(private orderService: OrderService) {}
+  constructor(
+    private orderService: OrderService,
+    @Inject('PROMOTION_SERVICE') private readonly client: ClientProxy,
+  ) {}
 
   @Roles(UserRole.SHOP, UserRole.USER)
   @ConfigCache({ cacheKey: 'order.find', eachUserConfig: true })
@@ -51,7 +56,8 @@ export class OrderController {
   @CustomResponse({ message: 'Created order', statusCode: HttpStatus.CREATED })
   @Post('create')
   async createOrder(@Body() orderCreateDto: OrderCreateDto) {
-    return await this.orderService.createOrder(orderCreateDto);
+    const newOrder = await this.orderService.createOrder(orderCreateDto);
+    return newOrder;
   }
 
   @UseGuards(OrderAuthorizeGuard)

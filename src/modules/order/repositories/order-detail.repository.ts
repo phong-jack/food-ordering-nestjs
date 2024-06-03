@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { OrderDetail } from '../entities/order-detail.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { OrderDetailCreateDto } from '../dtos/order-detail.create.dto';
 import { BaseRepositoryAbstract } from 'src/common/base/base.abstract.repository';
 
@@ -21,6 +21,13 @@ export class OrderDetailRepository extends BaseRepositoryAbstract<OrderDetail> {
       .leftJoinAndSelect('OrderDetail.product', 'product')
       .where('order.id = :orderId', { orderId })
       .getMany();
+  }
+
+  async findOneBy(filter: FindOptionsWhere<OrderDetail>): Promise<OrderDetail> {
+    return await this.orderDetailRepository.findOne({
+      relations: { order: true, product: true },
+      where: filter,
+    });
   }
 
   async createOrderDetail(

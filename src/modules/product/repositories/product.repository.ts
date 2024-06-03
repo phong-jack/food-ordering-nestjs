@@ -23,7 +23,7 @@ export class ProductRepository extends BaseRepositoryAbstract<Product> {
 
   async findById(id: number): Promise<Product | undefined> {
     return await this.productRepository.findOne({
-      relations: { shop: true },
+      relations: { shop: true, category: true },
       where: { id },
     });
   }

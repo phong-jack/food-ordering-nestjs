@@ -35,6 +35,7 @@ export class CaslAbilityFactory {
     const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
 
     if (user?.shopId === shopId) {
+      can(Action.Manage, Shop);
       can(Action.Update, Shop);
       can(Action.Read, Order);
     } else {

@@ -22,4 +22,15 @@ export class OrderDetailService {
     const orderDetails = await this.orderDetailRepository.findByOrder(orderId);
     return orderDetails;
   }
+
+  async findByOrderProduct(filter: { orderId: number; productId: number }) {
+    return await this.orderDetailRepository.findOneBy({
+      order: { id: filter.orderId },
+      product: { id: filter.productId },
+    });
+  }
+
+  async update(id: number, dto: { quantity?: number; price?: number }) {
+    return await this.orderDetailRepository.update(id, dto);
+  }
 }

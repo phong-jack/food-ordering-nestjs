@@ -1,6 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { OrderDetailCreateDto } from './order-detail.create.dto';
-import { IsNotEmpty, IsNumber, ValidateNested } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsNotEmpty,
+  IsNumber,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class OrderCreateDto {
@@ -20,5 +25,6 @@ export class OrderCreateDto {
   })
   @ValidateNested({ each: true })
   @Type(() => OrderDetailCreateDto)
+  @ArrayMinSize(1)
   orderDetails: OrderDetailCreateDto[];
 }

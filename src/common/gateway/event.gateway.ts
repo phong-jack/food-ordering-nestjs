@@ -17,9 +17,14 @@ import { SERVER_EVENTS } from '../events/constants/events.constant';
 import { OrderService } from 'src/modules/order/services/order.service';
 import { ChatSerivce } from 'src/modules/chat/chat.service';
 import { UserRole } from 'src/modules/user/constants/user.enum';
-import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Inject, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import { WebsocketExceptionsFilter } from '../filters/websocket-exception.filter';
 import { SendMessageDto } from './dtos/send-message.dto';
+import { AddProductDto } from './dtos/add-product.dto';
+import { ProductService } from 'src/modules/product/services/product.service';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
+import { Order } from 'src/modules/order/entities/order.entity';
 
 @UseFilters(new WebsocketExceptionsFilter())
 @UsePipes(new ValidationPipe({ transform: true }))
@@ -35,6 +40,8 @@ export class EventGateway
     private readonly authService: AuthService,
     private readonly orderService: OrderService,
     private readonly chatService: ChatSerivce,
+    private readonly productService: ProductService,
+    @Inject('PROMOTION_SERVICE') readonly promotionClient: ClientProxy,
   ) {}
   @WebSocketServer()
   server: Server;
@@ -61,6 +68,7 @@ export class EventGateway
             client.join(this.makeRoomName(order.id));
           });
         } else {
+          client.join(this.makeDraftOrderName(user.id));
           const orders = await this.orderService.findOrderByUser(user?.id);
           orders.forEach((order) => {
             client.join(this.makeRoomName(order.id));
@@ -68,11 +76,8 @@ export class EventGateway
         }
 
         this.addToConnectedClient(user.id, client);
-        console.log(client.data.user);
-        // const member = this.connectedClients.get(user.id)
-        // if(member) {
-        //   member.join(this.makeRoomName(chatId))
-        // }
+
+        // console.log('rooms :: ', client.rooms);
       } catch (error) {
         client.disconnect();
       }
@@ -129,5 +134,35 @@ export class EventGateway
 
   private makeRoomName(orderId: number): string {
     return `order-${orderId}`;
+  }
+
+  private makeDraftOrderName(userId: number): string {
+    return `draft_order-${userId}`;
+  }
+
+  @SubscribeMessage('onAddProductToCart')
+  async handleAddProductToCart(client: Socket, addProductDto: AddProductDto) {
+    const product = await this.productService.findById(addProductDto.productId);
+    if (!product) {
+      throw new WsException('Product not found!');
+    }
+    let cart = await this.orderService.findOrderingCart(
+      client.data.user.sub,
+      product.shop.id,
+    );
+
+    if (!cart) {
+      cart = await this.orderService.createCart({
+        shopId: product.shop.id,
+        userId: client.data.user.sub,
+        orderDetails: [{ ...addProductDto }],
+      });
+    } else {
+      cart = await this.orderService.updateCart(cart.id, { ...addProductDto });
+    }
+
+    this.server
+      .to(this.makeDraftOrderName(client.data.user.id))
+      .emit('onOrdering', cart);
   }
 }

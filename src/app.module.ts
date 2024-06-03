@@ -21,6 +21,7 @@ import { CronModule } from './common/cron/cron.module';
 import { BullModule } from '@nestjs/bullmq';
 import { NotificationModule } from './modules/notification/notification.module';
 import { MigrationModule } from './migrations/migration.module';
+import { ReviewModule } from './modules/review/review.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { MigrationModule } from './migrations/migration.module';
         synchronize: true,
         autoLoadEntities: true,
         cache: false,
+        timezone: 'Z',
       }),
     }),
     CacheModule.register({
@@ -75,6 +77,7 @@ import { MigrationModule } from './migrations/migration.module';
     FetchModule,
     CronModule,
     NotificationModule,
+    ReviewModule,
   ],
 })
 export class AppModule {}

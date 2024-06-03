@@ -19,9 +19,15 @@ export class OrderDetail extends BaseEntity {
   @JoinColumn({ name: 'productId' })
   product: Product;
 
-  @ManyToOne(() => Order, (order) => order.orderDetails)
+  @ManyToOne(() => Order, (order) => order.orderDetails, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   order: Relation<Order>;
 
   @Column()
   quantity: number;
+
+  @Column({ default: 0 })
+  price: number;
 }

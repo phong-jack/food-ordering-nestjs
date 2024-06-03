@@ -10,7 +10,6 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { TypeORMExceptionFilter } from './common/filters/type-orm-exception.filter';
 import { ErrorExceptionsFilter } from './common/filters/error-exeption.filter';
-import { WebsocketExceptionsFilter } from './common/filters/websocket-exception.filter';
 import { RedisIoAdapter } from './common/gateway/redis.adapter';
 import { SentryFilter } from './common/filters/sentry-exeption.filter';
 import * as Sentry from '@sentry/node';

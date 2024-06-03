@@ -5,4 +5,5 @@ export enum ORDER_STATUS {
   FINISHED = 3,
   CANCEL = 4,
   REJECTED = 5,
+  ORDERING = 10,
 }

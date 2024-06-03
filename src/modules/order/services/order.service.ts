@@ -1,6 +1,7 @@
 import {
   BadGatewayException,
   BadRequestException,
+  Inject,
   Injectable,
 } from '@nestjs/common';
 import { OrderRepository } from '../repositories/order.repository';
@@ -13,6 +14,13 @@ import { OrderChangeStatusDto } from '../dtos/order.change-status.dto';
 import { ORDER_STATUS } from '../constants/order-status.constant';
 import { ShopService } from 'src/modules/shop/services/shop.service';
 import { ProductService } from 'src/modules/product/services/product.service';
+import { Between, FindOptionsWhere } from 'typeorm';
+import { OrderStatus } from '../entities/order-status.entity';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
+import { OrderUpdateDto } from '../dtos/order.update.dto';
+import { OrderDetailCreateDto } from '../dtos/order-detail.create.dto';
+import { PromotionProductDto } from '../dtos/promotion.product.dto';
 
 @Injectable()
 export class OrderService {
@@ -22,6 +30,7 @@ export class OrderService {
     private shopService: ShopService,
     private productService: ProductService,
     private eventEmitter: EventEmitter2,
+    @Inject('PROMOTION_SERVICE') private readonly client: ClientProxy,
   ) {}
 
   async createOrder(orderCreateDto: OrderCreateDto) {
@@ -35,7 +44,7 @@ export class OrderService {
     }
 
     const order = await this.orderRepository.createOrder(orderCreateDto);
-    const orderDetails = await Promise.all(
+    await Promise.all(
       orderCreateDto.orderDetails.map((orderDetail) =>
         this.orderDetailService.createOrderDetail(order.id, orderDetail),
       ),
@@ -43,10 +52,7 @@ export class OrderService {
 
     this.eventEmitter.emit(SERVER_EVENTS.ORDER_CREATE, order);
 
-    return {
-      ...order,
-      orderDetails,
-    };
+    return await this.findById(order.id);
   }
 
   async findById(id: number): Promise<Order> {
@@ -59,6 +65,14 @@ export class OrderService {
 
   async findOrderByShop(shopId: number): Promise<Order[]> {
     return await this.orderRepository.findOrderByShop(shopId);
+  }
+
+  async findAll(filter: FindOptionsWhere<Order>): Promise<Order[]> {
+    return await this.orderRepository.findAll(filter);
+  }
+
+  async delete(id: number): Promise<void> {
+    await this.orderRepository.delete(id);
   }
 
   async changeStatus(id: number, orderChangeStatusDto: OrderChangeStatusDto) {
@@ -130,5 +144,114 @@ export class OrderService {
       totalOrders: statisticsByDay.totalOrders,
       revenue: revenue,
     };
+  }
+
+  //Find ORDERING (CART)
+  async findOrderingCart(userId: number, shopId: number) {
+    const now = new Date();
+    const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
+    //find cart arround 15 mins
+    const foundOrder = await this.orderRepository.findOneBy({
+      orderStatus: { statusCode: ORDER_STATUS.ORDERING },
+      user: { id: userId },
+      shop: { id: shopId },
+      updatedAt: Between(fifteenMinutesAgo, now),
+    });
+
+    return foundOrder;
+  }
+
+  //update
+  async updateCart(id: number, detailDto: OrderDetailCreateDto) {
+    console.log('Update');
+    const cart = await this.findById(id);
+    const product = await this.productService.findById(detailDto.productId);
+    for (const cartDetail of cart.orderDetails) {
+      if (cartDetail.product.id === detailDto.productId) {
+        const quantityChangeValue = this.getQuantityChange(
+          detailDto.quantity,
+          cartDetail.quantity,
+        );
+        const promotion = await this.getPromotion({
+          ...product,
+          quantity: quantityChangeValue,
+        });
+
+        await this.orderDetailService.update(cartDetail.id, {
+          price: detailDto.price,
+          quantity: detailDto.quantity,
+        });
+        break;
+      } else {
+        console.log('create new detail', cartDetail);
+
+        const promotion = await lastValueFrom(
+          this.client.send('add.product', {
+            ...product,
+            quantity: detailDto.quantity,
+          }),
+        );
+        if (typeof promotion !== 'object') {
+          await this.orderDetailService.createOrderDetail(cart.id, {
+            ...detailDto,
+            price: product.price,
+          });
+        } else {
+          await this.orderDetailService.createOrderDetail(cart.id, {
+            ...detailDto,
+            price: this.getNewPrice(product.price, promotion.discount),
+          });
+        }
+        break;
+      }
+    }
+
+    const orderCart = await this.findById(id);
+    return orderCart;
+  }
+
+  // create item in cart
+  async createCart(orderCreateDto: OrderCreateDto) {
+    console.log('Create');
+
+    const newCart = await this.orderRepository.createCart(orderCreateDto);
+    await Promise.all(
+      orderCreateDto.orderDetails.map(async (orderDetail) => {
+        const product = await this.productService.findById(
+          orderDetail.productId,
+        );
+        const promotion = await this.getPromotion({
+          ...product,
+          quantity: orderDetail.quantity,
+        });
+
+        if (typeof promotion !== 'object') {
+          await this.orderDetailService.createOrderDetail(newCart.id, {
+            ...orderDetail,
+            price: product.price,
+          });
+        } else {
+          await this.orderDetailService.createOrderDetail(newCart.id, {
+            ...orderDetail,
+            price: this.getNewPrice(product.price, promotion.discount),
+          });
+        }
+      }),
+    );
+
+    const orderCart = await this.findById(newCart.id);
+    return orderCart;
+  }
+
+  private getNewPrice(productPrice: number, discount: number) {
+    return productPrice * (1 - discount);
+  }
+
+  private getQuantityChange(newQuantity: number, oldQuantity: number) {
+    return newQuantity - oldQuantity;
+  }
+
+  private getPromotion(product: PromotionProductDto): Promise<any> {
+    return lastValueFrom(this.client.send('add.product', product));
   }
 }

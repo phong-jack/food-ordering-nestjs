@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpStatus,
+  Inject,
   Param,
   ParseIntPipe,
   Patch,
@@ -42,13 +43,19 @@ import { RoleGuard } from 'src/modules/auth/guards/role.guard';
 import { Roles } from 'src/modules/auth/decorators/roles.decorator';
 import { UserRole } from 'src/modules/user/constants/user.enum';
 import { PaginateDto } from '../dtos/paginate.dto';
+import { PromotionCreateDto } from '../dtos/promotion.create.dto';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
 
 @UseGuards(AccessTokenGuard)
 @ApiBearerAuth()
 @ApiTags('shop')
 @Controller('shop')
 export class ShopController {
-  constructor(private shopService: ShopService) {}
+  constructor(
+    private shopService: ShopService,
+    @Inject('PROMOTION_SERVICE') private readonly client: ClientProxy,
+  ) {}
 
   @Public()
   @UseInterceptors(HttpCacheInteceptor)
@@ -123,5 +130,25 @@ export class ShopController {
   @Delete('delete/:id')
   async deleteShop(@Param('id', ParseIntPipe) id: number) {
     return await this.shopService.deleteShop(id);
+  }
+
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Manage, Shop))
+  @CustomResponse({
+    message: 'Create golden hour promotion',
+    statusCode: HttpStatus.CREATED,
+  })
+  @Post(':id/promotion/create/')
+  async createPromotion(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() promotionCreateDto: PromotionCreateDto,
+  ) {
+    const response = await lastValueFrom(
+      this.client.send('promotion.created', {
+        shopId: id,
+        ...promotionCreateDto,
+      }),
+    );
+    return response;
   }
 }

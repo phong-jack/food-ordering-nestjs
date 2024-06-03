@@ -13,6 +13,7 @@ import { CaslModule } from '../casl/casl.module';
 import { ShopModule } from '../shop/shop.module';
 import { OrderStatusService } from './services/order-status.service';
 import { ProductModule } from '../product/product.module';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
@@ -25,6 +26,19 @@ import { ProductModule } from '../product/product.module';
     ]),
     forwardRef(() => CaslModule),
     ShopModule,
+    ClientsModule.register([
+      {
+        name: 'PROMOTION_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBIT_MQ_URI],
+          queue: 'main_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+    ]),
   ],
   providers: [
     OrderRepository,

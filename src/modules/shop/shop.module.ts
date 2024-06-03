@@ -10,17 +10,30 @@ import { UserModule } from '../user/user.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ShopProcessor } from './queues/shop.processor';
 import { QueueName } from 'src/common/constants/queue.constant';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Shop]),
-    TypeOrmModule.forFeature([ShopRepository]),
     CaslModule,
     GeocodingModule,
     UserModule,
     BullModule.registerQueue({
       name: QueueName.SHOP,
     }),
+    ClientsModule.register([
+      {
+        name: 'PROMOTION_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBIT_MQ_URI],
+          queue: 'main_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+    ]),
   ],
   providers: [ShopService, ShopRepository, ShopProcessor],
   controllers: [ShopController],
