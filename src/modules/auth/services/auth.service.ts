@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { UserCreateDto } from 'src/modules/user/dtos/user.create.dto';
-import { UserService } from 'src/modules/user/services/user/user.service';
+import { UserService } from 'src/modules/user/services/user.service';
 import argon2, { hash } from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { SignInDto } from '../dtos/auth.sign-in.dto';

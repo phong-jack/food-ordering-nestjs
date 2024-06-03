@@ -9,9 +9,9 @@ import {
   Relation,
 } from 'typeorm';
 import { UserRole } from '../constants/user.enum';
-import { Shop } from 'src/modules/shop/entities/Shop';
 import { Exclude } from 'class-transformer';
 import { Setting } from 'src/modules/setting/entities/setting.entity';
+import { Shop } from 'src/modules/shop/entities/Shop';
 
 @Entity({ name: 'user' })
 export class User extends BaseEntity {

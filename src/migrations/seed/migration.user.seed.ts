@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Command } from 'nestjs-command';
 import { AuthService } from 'src/modules/auth/services/auth.service';
 import { UserRole } from 'src/modules/user/constants/user.enum';
-import { UserService } from 'src/modules/user/services/user/user.service';
+import { UserService } from 'src/modules/user/services/user.service';
 
 @Injectable()
 export class MigrationUserSeed {
