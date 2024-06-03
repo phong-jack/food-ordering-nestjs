@@ -5,7 +5,7 @@ import { SERVER_EVENTS } from '../constants/events.constant';
 import { NotificationSendOrderDto } from 'src/modules/notification/dtos/notifitcation.send-order.dto';
 import { NotificationService } from 'src/modules/notification/notification.service';
 import { Order } from 'src/modules/order/entities/order.entity';
-import { UserService } from 'src/modules/user/services/user/user.service';
+import { UserService } from 'src/modules/user/services/user.service';
 
 @Injectable()
 export class OrderListener {

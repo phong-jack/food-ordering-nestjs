@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { UserRepository } from '../../repositories/user.repository';
-import { User } from '../../entities/user.entity';
-import { UserCreateDto } from '../../dtos/user.create.dto';
-import { UserUpdateDto } from '../../dtos/user.update.dto';
+import { UserRepository } from '../repositories/user.repository';
+import { User } from '../entities/user.entity';
+import { UserCreateDto } from '../dtos/user.create.dto';
+import { UserUpdateDto } from '../dtos/user.update.dto';
 import { FindOneOptions, FindOptionsWhere } from 'typeorm';
 
 @Injectable()

@@ -9,7 +9,7 @@ import {
   Geometry,
 } from 'src/modules/geocoding/interfaces/geocoding.response';
 import { LocateService } from 'src/modules/geocoding/service/locate.service';
-import { UserService } from 'src/modules/user/services/user/user.service';
+import { UserService } from 'src/modules/user/services/user.service';
 import { ShopUpsertDto } from '../dtos/shop.upsert.dto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';

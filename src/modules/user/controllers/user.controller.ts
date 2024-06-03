@@ -10,7 +10,7 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
-import { UserService } from '../services/user/user.service';
+import { UserService } from '../services/user.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserCreateDto } from '../dtos/user.create.dto';
 import { CustomResponse } from 'src/common/decorators/custom-response.interceptor';
