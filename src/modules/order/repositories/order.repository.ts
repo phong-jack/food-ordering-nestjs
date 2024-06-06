@@ -5,23 +5,30 @@ import { BadRequestException } from '@nestjs/common';
 import { OrderCreateDto } from '../dtos/order.create.dto';
 import { ORDER_STATUS } from '../constants/order-status.constant';
 import { OrderChangeStatusDto } from '../dtos/order.change-status.dto';
+import { BaseRepositoryAbstract } from 'src/common/base/base.abstract.repository';
 
-export class OrderRepository {
+export class OrderRepository extends BaseRepositoryAbstract<Order> {
   constructor(
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
-  ) {}
+  ) {
+    super(orderRepository);
+  }
 
   async findAll(): Promise<Order[]> {
     return await this.orderRepository.find();
   }
 
-  async findById(id: number): Promise<Order> {
-    const order = await this.orderRepository.findOne({
-      relations: { shop: true, user: true, orderStatus: true },
-      where: { id },
-    });
-    if (!order) throw new BadRequestException('Order not found!');
+  async findById(id: number): Promise<Order | undefined> {
+    const order = await this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.id = :id', { id: id })
+      .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.orderStatus', 'orderStatus')
+      .leftJoinAndSelect('order.orderDetails', 'orderDetails')
+      .leftJoinAndSelect('orderDetails.product', 'product')
+      .getOne();
+
     return order;
   }
 

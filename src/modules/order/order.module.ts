@@ -12,6 +12,10 @@ import { OrderDetailService } from './services/order-detail.service';
 import { CaslModule } from '../casl/casl.module';
 import { ShopModule } from '../shop/shop.module';
 import { OrderStatusService } from './services/order-status.service';
+import { RainStrategy } from './strategies/rain.strategy';
+import { NormalStrategy } from './strategies/normal.strategy';
+import { OrderStrategyFactoryImpl } from './strategies/order.strategy.factory.impl';
+import { EnvironmentConfigService } from 'src/configs/environment.config.service';
 
 @Module({
   imports: [
@@ -25,12 +29,13 @@ import { OrderStatusService } from './services/order-status.service';
     ShopModule,
   ],
   providers: [
-    OrderRepository,
     OrderService,
+    OrderRepository,
     OrderDetailRepository,
     OrderDetailService,
     OrderStatusRepository,
     OrderStatusService,
+    OrderStrategyFactoryImpl,
   ],
   controllers: [OrderController],
   exports: [OrderService, OrderStatusService, OrderDetailService],

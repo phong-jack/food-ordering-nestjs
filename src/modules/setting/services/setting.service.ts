@@ -17,6 +17,19 @@ export class SettingService {
     return await this.settingRepository.findById(id);
   }
 
+  async findAllByShop(shopId: number): Promise<Setting[]> {
+    return await this.settingRepository.findAllBy({
+      user: { shop: { id: shopId } },
+    });
+  }
+
+  async findByShopKey(shopId: number, key: SETTING_KEY) {
+    return await this.settingRepository.findOneBy({
+      user: { shop: { id: shopId } },
+      key: key,
+    });
+  }
+
   async createSetting(settingCreateDto: SettingCreateDto) {
     return await this.settingRepository.create(settingCreateDto);
   }

@@ -12,15 +12,22 @@ import { Order } from '../entities/order.entity';
 import { OrderChangeStatusDto } from '../dtos/order.change-status.dto';
 import { ORDER_STATUS } from '../constants/order-status.constant';
 import { ShopService } from 'src/modules/shop/services/shop.service';
+import { OrderStrategyFactoryImpl } from '../strategies/order.strategy.factory.impl';
+import { OrderStrategy } from '../strategies/order.strategy.interface';
 
 @Injectable()
 export class OrderService {
+  private orderStrategy: OrderStrategy;
+
   constructor(
     private orderRepository: OrderRepository,
     private orderDetailService: OrderDetailService,
     private shopService: ShopService,
     private eventEmitter: EventEmitter2,
-  ) {}
+    private readonly orderStrategyFactory: OrderStrategyFactoryImpl,
+  ) {
+    this.orderStrategy = this.orderStrategyFactory.create();
+  }
 
   async createOrder(orderCreateDto: OrderCreateDto) {
     const order = await this.orderRepository.createOrder(orderCreateDto);
@@ -29,11 +36,10 @@ export class OrderService {
         this.orderDetailService.createOrderDetail(order.id, orderDetail),
       ),
     );
+
     this.eventEmitter.emit(SERVER_EVENTS.ORDER_CREATE, order.id);
-    return {
-      ...order,
-      orderDetails,
-    };
+    const totalAmount = await this.calculatorTotalAmount(order.id);
+    return await this.findById(order.id);
   }
 
   async findById(id: number): Promise<Order> {
@@ -117,5 +123,18 @@ export class OrderService {
       totalOrders: statisticsByDay.totalOrders,
       revenue: revenue,
     };
+  }
+
+  async calculatorTotalAmount(id: number) {
+    const order = await this.findById(id);
+    let totalAmount = 0;
+    for (const orderDetail of order.orderDetails) {
+      totalAmount += orderDetail.product.price * orderDetail.quantity;
+    }
+    totalAmount += this.orderStrategy.apply(order);
+
+    await this.orderRepository.update(id, { totalAmount: totalAmount });
+
+    return totalAmount;
   }
 }

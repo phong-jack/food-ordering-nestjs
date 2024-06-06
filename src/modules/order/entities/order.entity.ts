@@ -36,6 +36,9 @@ export class Order extends BaseEntity {
   @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.order)
   orderDetails: Relation<OrderDetail>[];
 
+  @Column({ default: 0 })
+  totalAmount: number;
+
   @CreateDateColumn()
   createdAt: Date;
 
