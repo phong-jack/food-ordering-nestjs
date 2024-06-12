@@ -17,7 +17,7 @@ export class Shipper extends BaseEntity {
   @Column({ type: 'varchar', length: 20 })
   name: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', unique: true })
   phone: string;
 
   @Column({ type: 'enum', enum: ShipperStatus, default: ShipperStatus.READY })

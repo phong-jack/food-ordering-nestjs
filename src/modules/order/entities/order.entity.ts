@@ -25,6 +25,10 @@ export class Order extends BaseEntity {
   @JoinColumn({ name: 'userId' })
   user: User;
 
+  @ManyToOne((type) => User)
+  @JoinColumn({ name: 'shipperId' })
+  shipper: User;
+
   @ManyToOne((type) => Shop)
   @JoinColumn({ name: 'shopId' })
   shop: Shop;

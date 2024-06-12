@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -22,7 +23,7 @@ import { ForgotPasswordDto } from '../dtos/auth.forgot-password.dto';
 
 @ApiBearerAuth()
 @ApiTags('auth')
-@Controller('auth')
+@Controller({ path: 'auth', version: '1' })
 export class AuthController {
   constructor(private authService: AuthService) {}
 
@@ -30,7 +31,7 @@ export class AuthController {
     message: 'Sign up success!',
     statusCode: HttpStatus.CREATED,
   })
-  @Post('signUp')
+  @Post('sign-up')
   signUp(@Body() userCreateDto: UserCreateDto) {
     return this.authService.signUp(userCreateDto);
   }
@@ -39,7 +40,7 @@ export class AuthController {
     message: 'Sign in success!',
     statusCode: HttpStatus.OK,
   })
-  @Post('signIn')
+  @Post('sign-in')
   signIn(@Body() signInDto: SignInDto) {
     return this.authService.signIn(signInDto);
   }
@@ -77,9 +78,18 @@ export class AuthController {
     return await this.authService.sendForgotMailRequest(forgotPasswordDto);
   }
 
-  @UseGuards(AccessTokenGuard)
-  @Get('profile')
-  getProfile(@Req() req) {
-    return req.user;
+  @CustomResponse({
+    message: 'Active user success!',
+    statusCode: HttpStatus.OK,
+  })
+  @Post('active')
+  async active(
+    @Query('token') token: string,
+    @Query('typeActive') typeActive: string,
+  ) {
+    if (!token) throw new ForbiddenException('Token is none!');
+    const decodedUser = await this.authService.decodeToken(token);
+    await this.authService.activeUser(typeActive, decodedUser['sub']);
+    return true;
   }
 }

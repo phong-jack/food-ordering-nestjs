@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ShopService } from './services/shop.service';
 import { ShopRepository } from './repositories/shop.repository';
 import { Shop } from './entities/Shop';
@@ -15,9 +15,9 @@ import { QueueName } from 'src/common/constants/queue.constant';
   imports: [
     TypeOrmModule.forFeature([Shop]),
     TypeOrmModule.forFeature([ShopRepository]),
-    CaslModule,
+    forwardRef(() => CaslModule),
     GeocodingModule,
-    UserModule,
+    forwardRef(() => UserModule),
     BullModule.registerQueue({
       name: QueueName.SHOP,
     }),

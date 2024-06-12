@@ -34,7 +34,7 @@ import { ProductAuthorizeGuard } from 'src/modules/casl/guards/product.guard';
 @ApiBearerAuth()
 @ApiTags('product')
 @UseGuards(AccessTokenGuard, RoleGuard)
-@Controller('product')
+@Controller({ path: 'product', version: '1' })
 export class ProductController {
   constructor(private productService: ProductService) {}
 

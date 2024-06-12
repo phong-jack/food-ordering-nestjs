@@ -20,6 +20,10 @@ import { FetchModule } from './common/fetch/fetch.module';
 import { CronModule } from './common/cron/cron.module';
 import { BullModule } from '@nestjs/bullmq';
 import { MigrationModule } from './migrations/migration.module';
+import { ShipperModule } from './modules/shipper/shipper.module';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { RedisModule } from 'nestjs-redis';
 
 @Module({
   imports: [
@@ -57,6 +61,11 @@ import { MigrationModule } from './migrations/migration.module';
         },
       }),
     }),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: 'schema.gql',
+    }),
+    ShipperModule,
     MigrationModule,
     EventEmitterModule.forRoot({ global: true }),
     ShopModule,

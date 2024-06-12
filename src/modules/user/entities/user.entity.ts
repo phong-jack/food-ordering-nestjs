@@ -12,6 +12,7 @@ import { UserRole } from '../constants/user.enum';
 import { Shop } from 'src/modules/shop/entities/Shop';
 import { Exclude } from 'class-transformer';
 import { Setting } from 'src/modules/setting/entities/setting.entity';
+import { UserMetadata } from './user-metatdata.entity';
 
 @Entity({ name: 'user' })
 export class User extends BaseEntity {
@@ -57,8 +58,8 @@ export class User extends BaseEntity {
   @OneToMany(() => Setting, (setting) => setting.user)
   settings: Relation<Setting[]>;
 
-  @Column({ default: false })
-  isActive?: boolean;
+  @OneToMany(() => UserMetadata, (userMetadata) => userMetadata.user)
+  userMetadata: Relation<UserMetadata[]>;
 
   @Exclude()
   @Column({ nullable: true })

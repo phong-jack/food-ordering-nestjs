@@ -1,4 +1,3 @@
-import { User } from 'src/modules/user/entities/user.entity';
 import {
   BaseEntity,
   Column,
@@ -10,20 +9,22 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { User } from './user.entity';
 
-@Entity({ name: 'setting' })
-export class Setting extends BaseEntity {
+@Entity({})
+export class UserMetadata extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({})
   key: string;
 
-  @Column()
+  @Column({})
   value: string;
 
-  @ManyToOne(() => User, (user) => user.settings, { nullable: true })
-  user?: Relation<User> | null;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
+  user: Relation<User>;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -9,6 +9,8 @@ import {
   Post,
   Put,
   UseGuards,
+  VERSION_NEUTRAL,
+  Version,
 } from '@nestjs/common';
 import { UserService } from '../services/user/user.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -17,28 +19,42 @@ import { CustomResponse } from 'src/common/decorators/custom-response.intercepto
 import { UserUpdateDto } from '../dtos/user.update.dto';
 import { AccessTokenGuard } from 'src/modules/auth/guards/access-token.guard';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
+import { RoleGuard } from 'src/modules/auth/guards/role.guard';
+import { Roles } from 'src/modules/auth/decorators/roles.decorator';
+import { UserRole } from '../constants/user.enum';
+import { CheckPolicies } from 'src/modules/casl/decorators/casl.decorator';
+import { AppAbility } from 'src/modules/casl/casl-ability.factory';
+import { Action } from 'src/modules/casl/constants/casl.constant';
+import { User } from '../entities/user.entity';
+import { PoliciesGuard } from 'src/modules/casl/guards/policy.guard';
+import { UserAuthorizeGuard } from 'src/modules/casl/guards/user.guard';
 
 @ApiBearerAuth()
 @UseGuards(AccessTokenGuard)
 @ApiTags('user')
-@Controller('user')
+@Controller({ version: '1', path: 'user' })
 export class UserController {
   constructor(private userService: UserService) {}
 
+  @UseGuards(RoleGuard)
+  @Roles(UserRole.ADMIN)
   @CustomResponse({
     message: 'Get all users success!',
     statusCode: HttpStatus.OK,
   })
-  @Get('')
+  @Get('list')
   async findAll() {
     return await this.userService.findAll();
   }
 
+  @UseGuards(UserAuthorizeGuard)
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, User))
+  @Roles(UserRole.SHOP, UserRole.USER)
   @CustomResponse({
     message: 'Find a user success!',
     statusCode: HttpStatus.OK,
   })
-  @Get(':id')
+  @Get('detail/:id')
   async findById(@Param('id', ParseIntPipe) id: number) {
     return await this.userService.findById(id);
   }
@@ -47,7 +63,7 @@ export class UserController {
     message: 'Created new user!',
     statusCode: HttpStatus.CREATED,
   })
-  @Post('create')
+  @Post('')
   async createUser(@Body() userCreateDto: UserCreateDto) {
     const newUser = this.userService.create(userCreateDto);
     return newUser;
@@ -57,7 +73,7 @@ export class UserController {
     message: 'Deleted successfull!',
     statusCode: HttpStatus.OK,
   })
-  @Delete('delete/:id')
+  @Delete(':id')
   async deleteUser(@Param('id', ParseIntPipe) id: number) {
     await this.userService.deleteUser(id);
   }
@@ -66,12 +82,12 @@ export class UserController {
     message: 'Updated user successfull!',
     statusCode: HttpStatus.OK,
   })
-  @Put('update/:id')
+  @Put(':id')
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() userUpdateDto: UserUpdateDto,
   ) {
-    const updatedUser = this.userService.updateUser(id, userUpdateDto);
+    const updatedUser = this.userService.update(id, userUpdateDto);
     return updatedUser;
   }
 }

@@ -12,10 +12,13 @@ import { OrderDetailService } from './services/order-detail.service';
 import { CaslModule } from '../casl/casl.module';
 import { ShopModule } from '../shop/shop.module';
 import { OrderStatusService } from './services/order-status.service';
-import { RainStrategy } from './strategies/rain.strategy';
-import { NormalStrategy } from './strategies/normal.strategy';
 import { OrderStrategyFactoryImpl } from './strategies/order.strategy.factory.impl';
-import { EnvironmentConfigService } from 'src/configs/environment.config.service';
+import { SettingModule } from '../setting/setting.module';
+import { BullModule } from '@nestjs/bullmq';
+import { QueueName } from 'src/common/constants/queue.constant';
+import { UserModule } from '../user/user.module';
+import { OrderProcessor } from './queues/order.processor';
+import { RedisModule } from 'nestjs-redis';
 
 @Module({
   imports: [
@@ -27,6 +30,11 @@ import { EnvironmentConfigService } from 'src/configs/environment.config.service
     ]),
     forwardRef(() => CaslModule),
     ShopModule,
+    forwardRef(() => UserModule),
+    SettingModule,
+    BullModule.registerQueue({
+      name: QueueName.ORDER,
+    }),
   ],
   providers: [
     OrderService,
@@ -36,6 +44,7 @@ import { EnvironmentConfigService } from 'src/configs/environment.config.service
     OrderStatusRepository,
     OrderStatusService,
     OrderStrategyFactoryImpl,
+    OrderProcessor,
   ],
   controllers: [OrderController],
   exports: [OrderService, OrderStatusService, OrderDetailService],

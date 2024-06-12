@@ -23,22 +23,35 @@ export class SettingService {
     });
   }
 
-  async findByShopKey(shopId: number, key: SETTING_KEY) {
+  async findByShopKey(shopId: number, key: string) {
     return await this.settingRepository.findOneBy({
       user: { shop: { id: shopId } },
       key: key,
     });
   }
 
+  async findAppSettingByKey(key: string): Promise<Setting | undefined> {
+    return await this.settingRepository.findOneBy({
+      user: null,
+      key: key,
+    });
+  }
+
   async createSetting(settingCreateDto: SettingCreateDto) {
-    return await this.settingRepository.create(settingCreateDto);
+    const newSetting = await this.settingRepository.create({
+      ...settingCreateDto,
+      user: { id: settingCreateDto.userId },
+    });
+
+    console.log('check new setting:: ', newSetting);
+    return await this.settingRepository.create(newSetting);
   }
 
   async findByUser(userId: number): Promise<Setting[]> {
     return await this.settingRepository.findByUser(userId);
   }
 
-  async findByUserKey(userId: number, key: SETTING_KEY): Promise<Setting> {
+  async findByUserKey(userId: number, key: string): Promise<Setting> {
     return await this.settingRepository.findByUserKey(userId, key);
   }
 

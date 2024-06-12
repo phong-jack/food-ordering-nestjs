@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ShipperRepostiory } from '../repositories/shipper.repository';
-import { ID } from 'type-graphql';
 import { string } from 'yargs';
 import { ShipperCreateInput } from '../dtos/shiper.create.input';
 import { ShipperUpdateInput } from '../dtos/shipper.update.input';
@@ -21,11 +20,11 @@ export class ShipperService {
     return this.shipperRepository.create(shipperCreateInput);
   }
 
-  update(id: string,shipperUpdateInput: ShipperUpdateInput) {
+  update(id: string, shipperUpdateInput: ShipperUpdateInput) {
     return this.shipperRepository.updateV2(id, shipperUpdateInput);
   }
 
   delete(id: string) {
-   return this.shipperRepository.deleteV2(id);
+    return this.shipperRepository.deleteV2(id);
   }
 }

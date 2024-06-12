@@ -7,8 +7,17 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class OrderStrategyFactoryImpl implements OrderStrategyFactory {
-  create(): OrderStrategy {
-    const strategy = process.env.ORDER_STRATEGY || 'normal';
-    return strategy === 'rain' ? new RainStrategy() : new NormalStrategy();
+  create(mode?: string | null): OrderStrategy {
+    // const strategy = process.env.ORDER_STRATEGY || 'normal';
+    // return strategy === 'rain' ? new RainStrategy() : new NormalStrategy();
+
+    switch (mode) {
+      case 'rain':
+        return new RainStrategy();
+      case 'normal':
+        return new NormalStrategy();
+      default:
+        return new NormalStrategy();
+    }
   }
 }

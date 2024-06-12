@@ -74,7 +74,7 @@ export class SettingRepository extends BaseRepositoryAbstract<Setting> {
 
   async findByUserKey(
     userId: number,
-    key: SETTING_KEY,
+    key: string,
   ): Promise<Setting | undefined> {
     const setting = await this.settingRepository.findOne({
       relations: { user: true },

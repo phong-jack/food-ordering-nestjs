@@ -12,26 +12,21 @@ export class UserRepository extends BaseRepositoryAbstract<User> {
     super(userRepository);
   }
 
-  async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
+  async findAllBy(filter: FindOptionsWhere<User>): Promise<User[]> {
+    return await this.userRepository.find({
+      relations: { userMetadata: true },
+      where: filter,
+    });
   }
 
   async findById(id: number): Promise<User | undefined> {
     return await this.userRepository.findOne({ where: { id } });
   }
 
-  async findOneByUserName(username: string) {
+  async findOneBy(filter: FindOptionsWhere<User>): Promise<User | undefined> {
     const user = await this.userRepository.findOne({
-      relations: { shop: true },
-      where: { username: username },
-    });
-    return user;
-  }
-
-  async findOneByEmail(email: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      relations: { shop: true },
-      where: { email: email },
+      relations: { shop: true, userMetadata: true },
+      where: filter,
     });
     return user;
   }
@@ -44,7 +39,7 @@ export class UserRepository extends BaseRepositoryAbstract<User> {
     return await this.userRepository.save(newUser);
   }
 
-  async updateUser(
+  async update(
     id: number,
     userCreateDto: UserUpdateDto,
   ): Promise<User | undefined> {

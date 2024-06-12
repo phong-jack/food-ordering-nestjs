@@ -4,9 +4,11 @@ import { ShipperService } from './services/shipper.service';
 import { Shipper } from './entities/shipper.entity';
 import { ShipperCreateInput } from './dtos/shiper.create.input';
 import { ShipperUpdateInput } from './dtos/shipper.update.input';
-import { DeleteResult } from 'typeorm';
+import { UseFilters } from '@nestjs/common';
+import { GrapqlExceptionFilter } from 'src/common/filters/graphql-exception.filter';
 
-@Resolver()
+@UseFilters(new GrapqlExceptionFilter())
+@Resolver('shipper')
 export class ShipperResolver {
   constructor(private readonly shipperService: ShipperService) {}
 
@@ -37,8 +39,8 @@ export class ShipperResolver {
     return await this.shipperService.update(id, shipperUpdateInput);
   }
 
-  @Mutation((returns) => ShipperDto, { nullable: true })
-  async delete(@Args('id', { type: () => ID }) id: string): Promise<any> {
+  @Mutation((returns) => Boolean)
+  async delete(@Args('id', { type: () => ID }) id: string): Promise<Boolean> {
     return await this.shipperService.delete(id);
   }
 }

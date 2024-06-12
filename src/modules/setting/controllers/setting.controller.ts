@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   HttpStatus,
@@ -18,12 +19,13 @@ import { UserRole } from 'src/modules/user/constants/user.enum';
 import { SettingUpdateDto } from '../dtos/setting.update.dto';
 import { SETTING_KEY } from '../constants/setting.constant';
 import { CustomResponse } from 'src/common/decorators/custom-response.interceptor';
+import { SettingCreateDto } from '../dtos/setting.create.dto';
 
 @ApiBearerAuth()
 @ApiTags('setting')
 // @UseGuards(AccessTokenGuard, RoleGuard)
 @Roles(UserRole.SHOP, UserRole.USER)
-@Controller('setting')
+@Controller({ path: 'setting', version: '1' })
 export class SettingController {
   constructor(private settingService: SettingService) {}
 
@@ -54,21 +56,6 @@ export class SettingController {
     return await this.settingService.findByUser(userId);
   }
 
-  @ApiQuery({
-    name: 'key',
-    type: 'enum',
-    enum: SETTING_KEY,
-    examples: {
-      timeZone: {
-        value: SETTING_KEY.TIME_ZONE,
-        description: 'timezone key',
-      },
-      language: {
-        value: SETTING_KEY.LANGUAGE,
-        description: 'language key',
-      },
-    },
-  })
   @CustomResponse({
     message: 'Get setting success!',
     statusCode: HttpStatus.OK,
@@ -79,6 +66,15 @@ export class SettingController {
     @Query() query: SettingUpdateDto,
   ) {
     return await this.settingService.findByUserKey(userId, query.key);
+  }
+
+  @CustomResponse({
+    message: 'Created setting',
+    statusCode: HttpStatus.CREATED,
+  })
+  @Post('create')
+  async create(@Body() settingCreateDto: SettingCreateDto) {
+    return await this.settingService.createSetting(settingCreateDto);
   }
 
   @Patch('update-setting/:id')

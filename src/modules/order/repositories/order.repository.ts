@@ -6,6 +6,7 @@ import { OrderCreateDto } from '../dtos/order.create.dto';
 import { ORDER_STATUS } from '../constants/order-status.constant';
 import { OrderChangeStatusDto } from '../dtos/order.change-status.dto';
 import { BaseRepositoryAbstract } from 'src/common/base/base.abstract.repository';
+import { OrderUpdateDto } from '../dtos/order.update.dto';
 
 export class OrderRepository extends BaseRepositoryAbstract<Order> {
   constructor(
@@ -20,16 +21,26 @@ export class OrderRepository extends BaseRepositoryAbstract<Order> {
   }
 
   async findById(id: number): Promise<Order | undefined> {
-    const order = await this.orderRepository
-      .createQueryBuilder('order')
-      .where('order.id = :id', { id: id })
-      .leftJoinAndSelect('order.user', 'user')
-      .leftJoinAndSelect('order.orderStatus', 'orderStatus')
-      .leftJoinAndSelect('order.orderDetails', 'orderDetails')
-      .leftJoinAndSelect('orderDetails.product', 'product')
-      .getOne();
+    return await this.orderRepository.findOne({
+      relations: {
+        user: true,
+        shipper: true,
+        shop: true,
+        orderStatus: true,
+        orderDetails: { product: true },
+      },
+      where: { id: id },
+    });
+  }
 
-    return order;
+  async updateOrder(
+    id: number,
+    orderUpdateDto: OrderUpdateDto,
+  ): Promise<Order> {
+    await this.orderRepository.update(id, {
+      shipper: { id: orderUpdateDto.shipperId },
+    });
+    return await this.findById(id);
   }
 
   async createOrder(orderCreateDto: OrderCreateDto) {
@@ -61,6 +72,8 @@ export class OrderRepository extends BaseRepositoryAbstract<Order> {
   }
 
   async changeStatus(id: number, { statusCode }: OrderChangeStatusDto) {
+    console.log('Check status:: ', statusCode);
+
     return await this.orderRepository.save({
       id: id,
       orderStatus: { statusCode: statusCode },

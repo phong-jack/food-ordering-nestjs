@@ -24,7 +24,8 @@ export class ShipperRepostiory extends BaseRepositoryAbstract<Shipper> {
     return this.findOne(id);
   }
 
-  async deleteV2(id: string): Promise<DeleteResult> {
-    return await this.shipperRepository.delete(id);
+  async deleteV2(id: string): Promise<Boolean> {
+    const result: DeleteResult = await this.shipperRepository.delete(id);
+    return Boolean(result.affected);
   }
 }

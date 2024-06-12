@@ -30,7 +30,7 @@ type Query {
 type Mutation {
   create(shipperCreateInput: ShipperCreateInput!): ShipperDto!
   update(id: ID!, shipperUpdateInput: ShipperUpdateInput!): ShipperDto!
-  delete(id: ID!): ShipperDto
+  delete(id: ID!): Boolean!
 }
 
 input ShipperCreateInput {
@@ -39,5 +39,5 @@ input ShipperCreateInput {
 }
 
 input ShipperUpdateInput {
-  status: ShipperStatus
+  status: String
 }
