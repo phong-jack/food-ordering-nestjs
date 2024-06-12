@@ -21,6 +21,7 @@ import { QueueName } from 'src/common/constants/queue.constant';
 import { Queue } from 'bullmq';
 import { UserMetadataService } from 'src/modules/user/services/user-metadata.service';
 import { USER_METADATA_KEY } from 'src/modules/user/constants/user-metadata.constant';
+import { ProductService } from 'src/modules/product/services/product.service';
 
 @Injectable()
 export class OrderService {
@@ -30,6 +31,7 @@ export class OrderService {
     private orderRepository: OrderRepository,
     private orderDetailService: OrderDetailService,
     private shopService: ShopService,
+    private productService: ProductService,
     private eventEmitter: EventEmitter2,
     private readonly orderStrategyFactory: OrderStrategyFactoryImpl,
     private settingService: SettingService,
@@ -41,6 +43,15 @@ export class OrderService {
   }
 
   async createOrder(orderCreateDto: OrderCreateDto) {
+    for (const detail of orderCreateDto.orderDetails) {
+      const product = await this.productService.findById(detail.productId);
+      if (!product) {
+        throw new BadRequestException(
+          'Product not found, Please enter new product',
+        );
+      }
+    }
+
     const order = await this.orderRepository.createOrder(orderCreateDto);
     const orderDetails = await Promise.all(
       orderCreateDto.orderDetails.map((orderDetail) =>

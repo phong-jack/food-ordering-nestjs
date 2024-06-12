@@ -19,6 +19,7 @@ import { GeocodingModule } from './modules/geocoding/geocoding.module';
 import { FetchModule } from './common/fetch/fetch.module';
 import { CronModule } from './common/cron/cron.module';
 import { BullModule } from '@nestjs/bullmq';
+import { NotificationModule } from './modules/notification/notification.module';
 import { MigrationModule } from './migrations/migration.module';
 import { ShipperModule } from './modules/shipper/shipper.module';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -82,6 +83,7 @@ import { RedisModule } from 'nestjs-redis';
     CaslModule,
     FetchModule,
     CronModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}

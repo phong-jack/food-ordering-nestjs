@@ -4,13 +4,18 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { UserRepository } from './repositories/user.repository';
 import { UserController } from './controllers/user.controller';
+import { NotificationModule } from '../notification/notification.module';
 import { UserMetadataRepository } from './repositories/user-metadata.repository';
 import { UserMetadata } from './entities/user-metatdata.entity';
 import { UserMetadataService } from './services/user-metadata.service';
 import { CaslModule } from '../casl/casl.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, UserMetadata]), CaslModule],
+  imports: [
+    NotificationModule,
+    TypeOrmModule.forFeature([User, UserMetadata]),
+    CaslModule,
+  ],
   providers: [
     UserService,
     UserRepository,

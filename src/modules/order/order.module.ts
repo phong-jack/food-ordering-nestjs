@@ -12,16 +12,17 @@ import { OrderDetailService } from './services/order-detail.service';
 import { CaslModule } from '../casl/casl.module';
 import { ShopModule } from '../shop/shop.module';
 import { OrderStatusService } from './services/order-status.service';
+import { ProductModule } from '../product/product.module';
 import { OrderStrategyFactoryImpl } from './strategies/order.strategy.factory.impl';
 import { SettingModule } from '../setting/setting.module';
 import { BullModule } from '@nestjs/bullmq';
 import { QueueName } from 'src/common/constants/queue.constant';
 import { UserModule } from '../user/user.module';
 import { OrderProcessor } from './queues/order.processor';
-import { RedisModule } from 'nestjs-redis';
 
 @Module({
   imports: [
+    ProductModule,
     TypeOrmModule.forFeature([Order, OrderDetail, OrderStatus]),
     TypeOrmModule.forFeature([
       OrderRepository,
