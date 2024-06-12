@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Setting } from '../entities/setting.entity';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SettingUpdateDto } from '../dtos/setting.update.dto';
 import { SETTING_KEY } from '../constants/setting.constant';
@@ -18,11 +18,31 @@ export class SettingRepository extends BaseRepositoryAbstract<Setting> {
     return await this.settingRepository.find();
   }
 
+  async findAllBy(filter: FindOptionsWhere<Setting>): Promise<Setting[]> {
+    const settings = await this.settingRepository.find({
+      relations: { user: { shop: true } },
+      where: filter,
+    });
+
+    return settings;
+  }
+
   async findById(id: number): Promise<Setting | undefined> {
     const setting = await this.settingRepository.findOne({
       relations: { user: true },
       where: { id: id },
     });
+    return setting;
+  }
+
+  async findOneBy(
+    filter: FindOptionsWhere<Setting>,
+  ): Promise<Setting | undefined> {
+    const setting = await this.settingRepository.findOne({
+      relations: { user: { shop: true } },
+      where: filter,
+    });
+
     return setting;
   }
 
@@ -54,7 +74,7 @@ export class SettingRepository extends BaseRepositoryAbstract<Setting> {
 
   async findByUserKey(
     userId: number,
-    key: SETTING_KEY,
+    key: string,
   ): Promise<Setting | undefined> {
     const setting = await this.settingRepository.findOne({
       relations: { user: true },

@@ -5,24 +5,42 @@ import { BadRequestException } from '@nestjs/common';
 import { OrderCreateDto } from '../dtos/order.create.dto';
 import { ORDER_STATUS } from '../constants/order-status.constant';
 import { OrderChangeStatusDto } from '../dtos/order.change-status.dto';
+import { BaseRepositoryAbstract } from 'src/common/base/base.abstract.repository';
+import { OrderUpdateDto } from '../dtos/order.update.dto';
 
-export class OrderRepository {
+export class OrderRepository extends BaseRepositoryAbstract<Order> {
   constructor(
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
-  ) {}
+  ) {
+    super(orderRepository);
+  }
 
   async findAll(): Promise<Order[]> {
     return await this.orderRepository.find();
   }
 
-  async findById(id: number): Promise<Order> {
-    const order = await this.orderRepository.findOne({
-      relations: { shop: true, user: true, orderStatus: true },
-      where: { id },
+  async findById(id: number): Promise<Order | undefined> {
+    return await this.orderRepository.findOne({
+      relations: {
+        user: true,
+        shipper: true,
+        shop: true,
+        orderStatus: true,
+        orderDetails: { product: true },
+      },
+      where: { id: id },
     });
-    if (!order) throw new BadRequestException('Order not found!');
-    return order;
+  }
+
+  async updateOrder(
+    id: number,
+    orderUpdateDto: OrderUpdateDto,
+  ): Promise<Order> {
+    await this.orderRepository.update(id, {
+      shipper: { id: orderUpdateDto.shipperId },
+    });
+    return await this.findById(id);
   }
 
   async createOrder(orderCreateDto: OrderCreateDto) {
@@ -54,6 +72,8 @@ export class OrderRepository {
   }
 
   async changeStatus(id: number, { statusCode }: OrderChangeStatusDto) {
+    console.log('Check status:: ', statusCode);
+
     return await this.orderRepository.save({
       id: id,
       orderStatus: { statusCode: statusCode },

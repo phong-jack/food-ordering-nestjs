@@ -1,5 +1,10 @@
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNotEmptyObject, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNotEmptyObject,
+  IsString,
+} from 'class-validator';
 import { User } from 'src/modules/user/entities/user.entity';
 
 export class SendMailDto {

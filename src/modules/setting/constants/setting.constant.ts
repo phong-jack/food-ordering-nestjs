@@ -5,4 +5,5 @@ export enum SETTING_KEY {
   SHOP_WORKING = 'shopWorking',
   WORKING_TIME = 'workingTime',
   DEFAULT_PAY_METHOD = 'defaultPayMethod',
+  ORDER_STRATEGY = 'orderStrategy',
 }

@@ -13,6 +13,12 @@ import { CaslModule } from '../casl/casl.module';
 import { ShopModule } from '../shop/shop.module';
 import { OrderStatusService } from './services/order-status.service';
 import { ProductModule } from '../product/product.module';
+import { OrderStrategyFactoryImpl } from './strategies/order.strategy.factory.impl';
+import { SettingModule } from '../setting/setting.module';
+import { BullModule } from '@nestjs/bullmq';
+import { QueueName } from 'src/common/constants/queue.constant';
+import { UserModule } from '../user/user.module';
+import { OrderProcessor } from './queues/order.processor';
 
 @Module({
   imports: [
@@ -25,14 +31,21 @@ import { ProductModule } from '../product/product.module';
     ]),
     forwardRef(() => CaslModule),
     ShopModule,
+    forwardRef(() => UserModule),
+    SettingModule,
+    BullModule.registerQueue({
+      name: QueueName.ORDER,
+    }),
   ],
   providers: [
-    OrderRepository,
     OrderService,
+    OrderRepository,
     OrderDetailRepository,
     OrderDetailService,
     OrderStatusRepository,
     OrderStatusService,
+    OrderStrategyFactoryImpl,
+    OrderProcessor,
   ],
   controllers: [OrderController],
   exports: [OrderService, OrderStatusService, OrderDetailService],

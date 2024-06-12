@@ -6,6 +6,7 @@
     "assets": ["**/*.hbs"],
     "watchAssets": true,
     "deleteOutDir": true,
-    "builder": "swc"
+    "builder": "swc",
+    "plugins": ["@nestjs/swagger"]
   }
 }

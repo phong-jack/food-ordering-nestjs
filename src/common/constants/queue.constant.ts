@@ -3,4 +3,5 @@ export enum QueueName {
   FETCH = 'fetch',
   PRODUCT = 'product',
   CRON = 'cron',
+  ORDER = 'order',
 }

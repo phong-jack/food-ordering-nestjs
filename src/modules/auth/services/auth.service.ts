@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserCreateDto } from 'src/modules/user/dtos/user.create.dto';
 import { UserService } from 'src/modules/user/services/user/user.service';
 import argon2, { hash } from 'argon2';
@@ -9,8 +14,14 @@ import { SendMailDto } from 'src/modules/mail/dtos/mail.send-mail.dto';
 import { ChangePasswordDto } from '../dtos/auth.change-password.dto';
 import { ForgotPasswordDto } from '../dtos/auth.forgot-password.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { UserCreateEventDto } from 'src/common/events/dtos/user-create.event.dto';
 import { SETTING_KEY } from 'src/modules/setting/constants/setting.constant';
+import { SettingCreateDto } from 'src/modules/setting/dtos/setting.create.dto';
+import { UserCreatedEventDto } from 'src/common/events/dtos/user-create.event.dto';
+import { USER_EVENTS } from 'src/common/events/constants/events.user.constant';
+import { UserActiveEventDto } from 'src/common/events/dtos/user-active.event.dto';
+import { UserMetadataService } from 'src/modules/user/services/user-metadata.service';
+import { isEmail } from 'class-validator';
+import { UserRequestVerifyEventDto } from 'src/common/events/dtos/user-requestVerify.event.dto';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +30,7 @@ export class AuthService {
     private jwtService: JwtService,
     private mailService: MailService,
     private eventEmitter: EventEmitter2,
+    private userMetadataService: UserMetadataService,
   ) {}
 
   async signUp(userCreateDto: UserCreateDto) {
@@ -33,59 +45,48 @@ export class AuthService {
       ...userCreateDto,
       password: hashPassword,
     });
-    const tokens = await this.getTokens(
-      newUser.id,
-      newUser.username,
-      newUser.role,
-      newUser.isActive,
-      newUser.shop?.id,
-    );
-    await this.updateRefreshToken(newUser.id, tokens.refreshToken);
-    const mailToken = await this.getMailToken(newUser.id, newUser.username);
 
+    const mailToken = await this.getMailToken(newUser.id, newUser.username);
     const sendMailDto: SendMailDto = { user: newUser, token: mailToken };
-    await this.mailService.sendUserConfirmation(
-      sendMailDto.user,
-      sendMailDto.token,
-    );
+
+    const settingCreateDto: SettingCreateDto = {
+      key: SETTING_KEY.LANGUAGE,
+      value: 'en',
+      userId: newUser.id,
+    };
 
     this.eventEmitter.emit(
-      'user.create',
-      new UserCreateEventDto({
-        key: SETTING_KEY.TIME_ZONE,
-        value: new Date().getTimezoneOffset().toString(),
-        userId: newUser.id,
-      }),
+      USER_EVENTS.REGISTERED,
+      new UserCreatedEventDto(sendMailDto, settingCreateDto),
     );
 
-    return {
-      user: newUser,
-      tokens,
-    };
+    return newUser;
   }
 
   async signIn(signInDto: SignInDto) {
     const user = await this.userService.findOneByUserName(signInDto.username);
     if (!user) throw new BadRequestException("This user doesn't exist!");
+
     const passwordMatches = await argon2.verify(
       user.password,
       signInDto.password,
     );
     if (!passwordMatches)
       throw new BadRequestException('Password is incorrect!');
+
     const tokens = await this.getTokens(
       user.id,
       user.username,
       user.role,
-      user.isActive,
       user.shop?.id,
     );
     await this.updateRefreshToken(user.id, tokens.refreshToken);
+
     return { user, tokens };
   }
 
   async logout(userId: number) {
-    return await this.userService.updateUser(userId, { refreshToken: null });
+    return await this.userService.update(userId, { refreshToken: null });
   }
 
   async changePassword(userId: number, changePasswordDto: ChangePasswordDto) {
@@ -105,7 +106,7 @@ export class AuthService {
       );
 
     const hashPassword = await this.hashData(changePasswordDto.password);
-    return await this.userService.updateUser(user.id, {
+    return await this.userService.update(user.id, {
       password: hashPassword,
     });
   }
@@ -117,13 +118,24 @@ export class AuthService {
       user.id,
       user.username,
       user.role,
-      user.isActive,
       user.shop?.id,
     );
     const sendMailDto: SendMailDto = { user: user, token: tokens.accessToken };
-    await this.mailService.sendForgotPasswordRequest(
-      sendMailDto.user,
-      sendMailDto.token,
+    await this.mailService.sendForgotPasswordRequest(sendMailDto);
+  }
+
+  async sendVerifyRequest(email: string) {
+    if (!isEmail(email)) {
+      throw new BadRequestException('Email format not valid');
+    }
+    const user = await this.userService.findOneByEmail(email);
+
+    const mailToken = await this.getMailToken(user.id, user.username);
+    const sendMailDto: SendMailDto = { user: user, token: mailToken };
+
+    this.eventEmitter.emit(
+      USER_EVENTS.REQUEST_VERIFY,
+      new UserRequestVerifyEventDto(sendMailDto),
     );
   }
 
@@ -143,30 +155,45 @@ export class AuthService {
     return mailToken;
   }
 
-  async handleVerifyToken(token) {
+  async handleVerifyToken(token: string) {
     const user = await this.jwtService.verify(token, {
       secret: process.env.JWT_ACCESS_SECRET,
     });
     return user;
   }
 
+  async decodeToken(token: string) {
+    try {
+      const decodedToken = await this.jwtService.decode(token);
+      return decodedToken;
+    } catch (error) {
+      throw new Error('Error decoding token');
+    }
+  }
+
+  async activeUser(typeActive: string, userId: number) {
+    this.eventEmitter.emit(
+      USER_EVENTS.ACTIVE,
+      new UserActiveEventDto(typeActive, userId),
+    );
+  }
+
   private async getTokens(
     userId: number,
     username: string,
     role: string,
-    isActive: boolean,
     shopId: number,
   ) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
-        { sub: userId, username, role, isActive, shopId },
+        { sub: userId, username, role, shopId },
         {
           secret: process.env.JWT_ACCESS_SECRET,
           expiresIn: '15m',
         },
       ),
       this.jwtService.signAsync(
-        { sub: userId, username, role, isActive, shopId },
+        { sub: userId, username, role, shopId },
         {
           secret: process.env.JWT_REFRESH_SECRET,
           expiresIn: '7d',
@@ -182,7 +209,7 @@ export class AuthService {
 
   private async updateRefreshToken(userId: number, refreshToken: string) {
     const hashedRefreshToken = await this.hashData(refreshToken);
-    await this.userService.updateUser(userId, {
+    await this.userService.update(userId, {
       refreshToken: hashedRefreshToken,
     });
   }

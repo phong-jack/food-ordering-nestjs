@@ -7,9 +7,9 @@ export class SettingUpdateDto {
     example: SETTING_KEY.TIME_ZONE,
     required: true,
   })
-  @IsEnum(SETTING_KEY)
+  @IsString()
   @IsNotEmpty()
-  key: SETTING_KEY;
+  key: string;
 
   @ApiProperty({
     example: new Date().getTimezoneOffset(),

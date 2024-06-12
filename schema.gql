@@ -1,0 +1,43 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type ShipperDto {
+  id: ID!
+  name: String!
+  phone: String!
+  status: ShipperStatus!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""Shipper status :))"""
+enum ShipperStatus {
+  SHIPPING
+  READY
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Query {
+  findOne(id: ID!): ShipperDto!
+  findAll: [ShipperDto!]!
+}
+
+type Mutation {
+  create(shipperCreateInput: ShipperCreateInput!): ShipperDto!
+  update(id: ID!, shipperUpdateInput: ShipperUpdateInput!): ShipperDto!
+  delete(id: ID!): Boolean!
+}
+
+input ShipperCreateInput {
+  name: String!
+  phone: String!
+}
+
+input ShipperUpdateInput {
+  status: String
+}

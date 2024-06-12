@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
   UseInterceptors,
   UsePipes,
@@ -34,11 +35,11 @@ import { PoliciesGuard } from 'src/modules/casl/guards/policy.guard';
 @UseGuards(AccessTokenGuard, RoleGuard)
 @ApiBearerAuth()
 @ApiTags('order')
-@Controller('order')
+@Controller({ path: 'order', version: '1' })
 export class OrderController {
   constructor(private orderService: OrderService) {}
 
-  @Roles(UserRole.SHOP, UserRole.USER)
+  @Roles(UserRole.SHOP, UserRole.USER, UserRole.SHIPPER, UserRole.ADMIN)
   @ConfigCache({ cacheKey: 'order.find', eachUserConfig: true })
   @UseInterceptors(HttpCacheInteceptor)
   @CustomResponse({ message: 'Get order success', statusCode: HttpStatus.OK })
@@ -49,24 +50,81 @@ export class OrderController {
 
   @Roles(UserRole.USER)
   @CustomResponse({ message: 'Created order', statusCode: HttpStatus.CREATED })
-  @Post('create')
-  async createOrder(@Body() orderCreateDto: OrderCreateDto) {
-    return await this.orderService.createOrder(orderCreateDto);
+  @Post()
+  async createOrder(@Req() req, @Body() orderCreateDto: OrderCreateDto) {
+    return await this.orderService.createOrder({
+      ...orderCreateDto,
+      userId: +req.user['sub'],
+    });
+  }
+
+  // @UseGuards(OrderAuthorizeGuard)
+  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, Order))
+  // @Roles(UserRole.SHOP, UserRole.USER)
+  // @CustomResponse({
+  //   message: 'Change order status success',
+  //   statusCode: HttpStatus.OK,
+  // })
+  // @Patch('change-status/:id')
+  // async changeStatus(
+  //   @Param('id', ParseIntPipe) id: number,
+  //   @Body() orderChangeStatusDto: OrderChangeStatusDto,
+  // ) {
+  //   return await this.orderService.changeStatus(id, orderChangeStatusDto);
+  // }
+
+  @UseGuards(OrderAuthorizeGuard)
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, Order))
+  @Roles(UserRole.USER, UserRole.ADMIN)
+  @CustomResponse({
+    message: 'User change order status success',
+    statusCode: HttpStatus.OK,
+  })
+  @Patch('user-change-status/:id')
+  async userChangeOrderStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() orderChangeStatusDto: OrderChangeStatusDto,
+  ) {
+    return await this.orderService.userChangeOrderStatus(
+      id,
+      orderChangeStatusDto,
+    );
   }
 
   @UseGuards(OrderAuthorizeGuard)
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, Order))
-  @Roles(UserRole.SHOP, UserRole.USER)
+  @Roles(UserRole.SHIPPER, UserRole.ADMIN)
   @CustomResponse({
-    message: 'Change order status success',
+    message: 'Shipper change order status success',
     statusCode: HttpStatus.OK,
   })
-  @Patch('change-status/:id')
-  async changeStatus(
+  @Patch('shipper-change-status/:id')
+  async shipperChangeOrderStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body() orderChangeStatusDto: OrderChangeStatusDto,
   ) {
-    return await this.orderService.changeStatus(id, orderChangeStatusDto);
+    return await this.orderService.shipperChangeOrderStatus(
+      id,
+      orderChangeStatusDto,
+    );
+  }
+
+  @UseGuards(OrderAuthorizeGuard)
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, Order))
+  @Roles(UserRole.SHOP, UserRole.ADMIN)
+  @CustomResponse({
+    message: 'Shop change order status success',
+    statusCode: HttpStatus.OK,
+  })
+  @Patch('shop-change-status/:id')
+  async shopChangeOrderStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() orderChangeStatusDto: OrderChangeStatusDto,
+  ) {
+    return await this.orderService.shopChangeOrderStatus(
+      id,
+      orderChangeStatusDto,
+    );
   }
 
   @UseGuards(PoliciesGuard)

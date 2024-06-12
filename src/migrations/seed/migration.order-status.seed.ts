@@ -49,6 +49,12 @@ export class MigrationOrderStatusSeed {
       description: 'Đơn hàng đã bị từ chối',
     });
 
+    const orderStatus7 = this.orderStatusService.create({
+      statusCode: 6,
+      statusReason: 'RISK',
+      description: 'Đơn hàng rủi ro',
+    });
+
     try {
       await Promise.all([
         orderStatus1,
@@ -57,6 +63,7 @@ export class MigrationOrderStatusSeed {
         orderStatus4,
         orderStatus5,
         orderStatus6,
+        orderStatus7,
       ]);
     } catch (err: any) {
       throw new Error(err.message);

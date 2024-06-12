@@ -4,15 +4,15 @@ import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
 export class SettingCreateDto {
   @ApiProperty({
-    example: SETTING_KEY.TIME_ZONE,
+    example: 'appMode',
     required: true,
   })
-  @IsEnum(SETTING_KEY)
+  @IsString()
   @IsNotEmpty()
-  key: SETTING_KEY;
+  key: string;
 
   @ApiProperty({
-    example: new Date().getTimezoneOffset(),
+    example: 'rain',
     required: true,
   })
   @IsString()
@@ -21,7 +21,7 @@ export class SettingCreateDto {
 
   @ApiProperty({
     example: 1,
-    required: true,
+    required: false,
   })
-  userId: number;
+  userId?: number;
 }

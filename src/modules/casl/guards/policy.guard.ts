@@ -9,6 +9,7 @@ import { AppAbility, CaslAbilityFactory } from '../casl-ability.factory';
 import { CHECK_POLICIES_KEY } from '../decorators/casl.decorator';
 import { PolicyHandler } from '../interfaces/casl.interface';
 
+//Shop Guard
 @Injectable()
 export class PoliciesGuard implements CanActivate {
   constructor(
@@ -26,7 +27,7 @@ export class PoliciesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const { user, params } = request;
     const shopId = params.id || params.shopId;
-    const ability = this.caslAbilityFactory.createForUser(user, +shopId);
+    const ability = this.caslAbilityFactory.createForShop(user, +shopId);
 
     return policyHandlers.every((handler) =>
       this.execPolicyHandler(handler, ability),

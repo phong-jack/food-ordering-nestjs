@@ -3,12 +3,19 @@ import { GatewayModule } from '../gateway/gateway.module';
 import { OrderListener } from './listeners/order.listener';
 import { SettingModule } from 'src/modules/setting/setting.module';
 import { UserListener } from './listeners/user.listener';
+import { MailModule } from 'src/modules/mail/mail.module';
+import { UserModule } from 'src/modules/user/user.module';
 import { NotificationModule } from 'src/modules/notification/notification.module';
 import { AuthListener } from './listeners/auth.listener';
-import { UserModule } from 'src/modules/user/user.module';
 
 @Module({
-  imports: [GatewayModule, SettingModule, NotificationModule, UserModule],
+  imports: [
+    GatewayModule,
+    SettingModule,
+    MailModule,
+    UserModule,
+    NotificationModule,
+  ],
   providers: [OrderListener, UserListener, AuthListener],
   exports: [OrderListener, UserListener],
 })

@@ -4,12 +4,9 @@ import { IsNotEmpty, IsNumber, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class OrderCreateDto {
-  @ApiProperty({ example: 1, description: 'Id of user' })
-  @IsNumber()
-  @IsNotEmpty()
-  userId: number;
+  userId?: number;
 
-  @ApiProperty({ example: 1, description: 'Id of shop' })
+  @ApiProperty({ example: 1000012108, description: 'Id of shop' })
   @IsNumber()
   @IsNotEmpty()
   shopId: number;

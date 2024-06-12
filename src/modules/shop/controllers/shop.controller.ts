@@ -46,7 +46,7 @@ import { PaginateDto } from '../dtos/paginate.dto';
 @UseGuards(AccessTokenGuard)
 @ApiBearerAuth()
 @ApiTags('shop')
-@Controller('shop')
+@Controller({ path: 'shop', version: '1' })
 export class ShopController {
   constructor(private shopService: ShopService) {}
 

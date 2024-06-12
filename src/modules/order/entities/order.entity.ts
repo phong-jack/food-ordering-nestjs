@@ -25,6 +25,10 @@ export class Order extends BaseEntity {
   @JoinColumn({ name: 'userId' })
   user: User;
 
+  @ManyToOne((type) => User)
+  @JoinColumn({ name: 'shipperId' })
+  shipper: User;
+
   @ManyToOne((type) => Shop)
   @JoinColumn({ name: 'shopId' })
   shop: Shop;
@@ -35,6 +39,9 @@ export class Order extends BaseEntity {
 
   @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.order)
   orderDetails: Relation<OrderDetail>[];
+
+  @Column({ default: 0 })
+  totalAmount: number;
 
   @CreateDateColumn()
   createdAt: Date;

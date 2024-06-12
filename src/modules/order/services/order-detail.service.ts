@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OrderDetailRepository } from '../repositories/order-detail.repository';
 import { OrderDetailCreateDto } from '../dtos/order-detail.create.dto';
-import { FindOneOptions } from 'typeorm';
 import { OrderDetail } from '../entities/order-detail.entity';
 
 @Injectable()
