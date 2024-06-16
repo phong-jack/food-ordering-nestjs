@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { ShopRepository } from '../repositories/shop.repository';
 import { Shop } from '../entities/Shop';
 import { ShopUpdateDto } from '../dtos/shop.update.dto';
@@ -13,6 +17,10 @@ import { UserService } from 'src/modules/user/services/user/user.service';
 import { ShopUpsertDto } from '../dtos/shop.upsert.dto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { AppAbility } from 'src/modules/casl/casl-ability.factory';
+import { Action } from 'src/modules/casl/constants/casl.constant';
+import { subject } from '@casl/ability';
+import { Order } from 'src/modules/order/entities/order.entity';
 
 @Injectable()
 export class ShopService {
@@ -33,8 +41,17 @@ export class ShopService {
     return await this.shopRepository.findOneById(id);
   }
 
-  async updateShop(id: number, shopUpdateDto: ShopUpdateDto) {
+  async updateShop(
+    id: number,
+    shopUpdateDto: ShopUpdateDto,
+    abilities: AppAbility,
+  ) {
     const shop = await this.findOneById(id);
+
+    if (abilities?.can(Action.Update, subject('Shop', shop))) {
+      throw new ForbiddenException('have hot permission');
+    }
+
     if (shop.address !== shopUpdateDto.address) {
       await this.updateShopLocate(id, shopUpdateDto.address);
     }

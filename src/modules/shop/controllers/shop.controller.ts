@@ -42,6 +42,8 @@ import { RoleGuard } from 'src/modules/auth/guards/role.guard';
 import { Roles } from 'src/modules/auth/decorators/roles.decorator';
 import { UserRole } from 'src/modules/user/constants/user.enum';
 import { PaginateDto } from '../dtos/paginate.dto';
+import { ShopUpdatePolicyHanlder } from 'src/modules/casl/policies/shop/shop.update.policy';
+import { CurrentAbilities } from 'src/modules/casl/decorators/current-ability.decorator';
 
 @UseGuards(AccessTokenGuard)
 @ApiBearerAuth()
@@ -101,7 +103,7 @@ export class ShopController {
   }
 
   @UseGuards(PoliciesGuard)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, Shop))
+  @CheckPolicies(new ShopUpdatePolicyHanlder())
   @CustomResponse({
     message: 'Updated shop!',
     statusCode: HttpStatus.CREATED,
@@ -110,8 +112,10 @@ export class ShopController {
   async updateShop(
     @Param('id', ParseIntPipe) id: number,
     @Body() shopUpdateDto: ShopUpdateDto,
+    @CurrentAbilities()
+    abilities: AppAbility,
   ) {
-    return await this.shopService.updateShop(id, shopUpdateDto);
+    return await this.shopService.updateShop(id, shopUpdateDto, abilities);
   }
 
   @UseGuards(PoliciesGuard)

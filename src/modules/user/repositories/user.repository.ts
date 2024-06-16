@@ -20,7 +20,10 @@ export class UserRepository extends BaseRepositoryAbstract<User> {
   }
 
   async findById(id: number): Promise<User | undefined> {
-    return await this.userRepository.findOne({ where: { id } });
+    return await this.userRepository.findOne({
+      relations: { shop: true, userMetadata: true },
+      where: { id },
+    });
   }
 
   async findOneBy(filter: FindOptionsWhere<User>): Promise<User | undefined> {
@@ -29,13 +32,6 @@ export class UserRepository extends BaseRepositoryAbstract<User> {
       where: filter,
     });
     return user;
-  }
-
-  async findOneBy(filter: FindOptionsWhere<User>): Promise<User> {
-    return await this.userRepository.findOne({
-      relations: { shop: true },
-      where: filter,
-    });
   }
 
   async create(userCreateDto: UserCreateDto): Promise<User> {

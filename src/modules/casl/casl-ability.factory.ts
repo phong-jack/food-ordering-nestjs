@@ -1,11 +1,15 @@
 import {
   AbilityBuilder,
   AbilityClass,
+  AbilityTuple,
+  ConditionsMatcher,
   ExtractSubjectType,
   InferSubjects,
+  MatchConditions,
   MongoAbility,
   PureAbility,
   createMongoAbility,
+  subject,
 } from '@casl/ability';
 import {
   BadRequestException,
@@ -23,11 +27,11 @@ import { OrderService } from '../order/services/order.service';
 import { UserService } from '../user/services/user/user.service';
 import { UserRole } from '../user/constants/user.enum';
 
-type Subjects =
+type AppSubjects =
   | InferSubjects<typeof Shop | typeof User | typeof Product | typeof Order>
   | 'all';
 
-export type AppAbility = MongoAbility<[Action, Subjects]>;
+export type AppAbility = PureAbility<[Action, AppSubjects]>;
 
 @Injectable()
 export class CaslAbilityFactory {
@@ -38,20 +42,20 @@ export class CaslAbilityFactory {
     private orderService: OrderService,
   ) {}
 
-  createForShop(user: any, shopId: number) {
-    const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
+  createForShop(user: User, shopId?: number) {
+    const { can, cannot, build } = new AbilityBuilder<AppAbility>(
+      createMongoAbility,
+    );
 
-    if (user?.shopId === shopId) {
-      can(Action.Update, Shop);
-      can(Action.Read, Order);
-    } else {
-      can(Action.Read, Shop);
+    if (user.role === UserRole.ADMIN) {
+      can(Action.Manage, Shop);
     }
+    console.log('check Shop id:: ', user?.shop.id);
 
-    return build({
-      detectSubjectType: (object) =>
-        object.constructor as ExtractSubjectType<Subjects>,
-    });
+    can(Action.Read, Shop);
+    can(Action.Update, Shop, { id: user?.shop.id });
+
+    return build();
   }
 
   async createForProduct(user: any, productId: number) {
@@ -66,7 +70,7 @@ export class CaslAbilityFactory {
 
     return build({
       detectSubjectType: (object) =>
-        object.constructor as ExtractSubjectType<Subjects>,
+        object.constructor as ExtractSubjectType<AppSubjects>,
     });
   }
 
@@ -107,7 +111,7 @@ export class CaslAbilityFactory {
 
     return build({
       detectSubjectType: (object) =>
-        object.constructor as ExtractSubjectType<Subjects>,
+        object.constructor as ExtractSubjectType<AppSubjects>,
     });
   }
 
@@ -127,7 +131,7 @@ export class CaslAbilityFactory {
 
     return build({
       detectSubjectType: (object) =>
-        object.constructor as ExtractSubjectType<Subjects>,
+        object.constructor as ExtractSubjectType<AppSubjects>,
     });
   }
 }

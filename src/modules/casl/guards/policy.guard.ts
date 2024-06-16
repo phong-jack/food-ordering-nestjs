@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { AppAbility, CaslAbilityFactory } from '../casl-ability.factory';
 import { CHECK_POLICIES_KEY } from '../decorators/casl.decorator';
 import { PolicyHandler } from '../interfaces/casl.interface';
+import { UserService } from 'src/modules/user/services/user/user.service';
 
 //Shop Guard
 @Injectable()
@@ -15,6 +16,7 @@ export class PoliciesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private caslAbilityFactory: CaslAbilityFactory,
+    private userService: UserService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -25,19 +27,20 @@ export class PoliciesGuard implements CanActivate {
       ) || [];
 
     const request = context.switchToHttp().getRequest();
-    const { user, params } = request;
-    const shopId = params.id || params.shopId;
-    const ability = this.caslAbilityFactory.createForShop(user, +shopId);
+    const user = await this.userService.findById(request.user.sub);
+
+    const abilities = this.caslAbilityFactory.createForShop(user);
+    request.abilities = abilities;
 
     return policyHandlers.every((handler) =>
-      this.execPolicyHandler(handler, ability),
+      this.execPolicyHandler(handler, abilities),
     );
   }
 
-  private execPolicyHandler(handler: PolicyHandler, ability: AppAbility) {
+  private execPolicyHandler(handler: PolicyHandler, abilities: AppAbility) {
     if (typeof handler === 'function') {
-      return handler(ability);
+      return handler(abilities);
     }
-    return handler.handle(ability);
+    return handler.handle(abilities);
   }
 }
