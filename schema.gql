@@ -39,5 +39,5 @@ input ShipperCreateInput {
 }
 
 input ShipperUpdateInput {
-  status: String
+  status: ShipperStatus
 }

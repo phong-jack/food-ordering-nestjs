@@ -1,6 +1,7 @@
 import {
   BadGatewayException,
   BadRequestException,
+  ForbiddenException,
   Injectable,
 } from '@nestjs/common';
 import { OrderRepository } from '../repositories/order.repository';
@@ -22,6 +23,9 @@ import { Queue } from 'bullmq';
 import { UserMetadataService } from 'src/modules/user/services/user-metadata.service';
 import { USER_METADATA_KEY } from 'src/modules/user/constants/user-metadata.constant';
 import { ProductService } from 'src/modules/product/services/product.service';
+import { AppAbility } from 'src/modules/casl/casl-ability.factory';
+import { Action } from 'src/modules/casl/constants/casl.constant';
+import { ForbiddenError, subject } from '@casl/ability';
 
 @Injectable()
 export class OrderService {
@@ -86,7 +90,15 @@ export class OrderService {
   async shipperChangeOrderStatus(
     id: number,
     orderChangeStatusDto: OrderChangeStatusDto,
+    abilities: AppAbility,
   ) {
+    const order = await this.findById(id);
+    if (!abilities.can(Action.Update, subject('Order', order))) {
+      throw new ForbiddenException(
+        'You do not have permission to update this order',
+      );
+    }
+
     const statusShipperCanChange = [ORDER_STATUS.FINISHED, ORDER_STATUS.RISK];
     if (!statusShipperCanChange.includes(orderChangeStatusDto.statusCode)) {
       throw new BadRequestException(
@@ -94,15 +106,23 @@ export class OrderService {
       );
     }
     await this.changeStatus(id, orderChangeStatusDto);
-    const order = await this.findById(id);
+    const orderUpdated = await this.findById(id);
 
-    return order;
+    return orderUpdated;
   }
 
   async userChangeOrderStatus(
     id: number,
     orderChangeStatusDto: OrderChangeStatusDto,
+    abilities: AppAbility,
   ) {
+    const order = await this.findById(id);
+    if (!abilities.can(Action.Update, subject('Order', order))) {
+      throw new ForbiddenException(
+        'You do not have permission to update this order',
+      );
+    }
+
     const statusUserCanChange = [ORDER_STATUS.CANCEL];
     if (!statusUserCanChange.includes(orderChangeStatusDto.statusCode)) {
       throw new BadRequestException(
@@ -117,7 +137,15 @@ export class OrderService {
   async shopChangeOrderStatus(
     id: number,
     orderChangeStatusDto: OrderChangeStatusDto,
+    abilities: AppAbility,
   ) {
+    const order = await this.findById(id);
+    if (!abilities?.can(Action.Update, subject('Order', order))) {
+      throw new ForbiddenException(
+        'You do not have permission to update this order',
+      );
+    }
+
     const statusShopCanChange = [
       ORDER_STATUS.ACCEPTED,
       ORDER_STATUS.SHIPPING,

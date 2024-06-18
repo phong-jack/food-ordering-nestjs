@@ -12,7 +12,9 @@ import {
 import { NotificationService } from './notification.service';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';
 import { NotificationCreateDto } from './dtos/notification.create.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('notification')
 @Controller('notification')
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}

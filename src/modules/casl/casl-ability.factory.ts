@@ -1,11 +1,17 @@
 import {
   AbilityBuilder,
   AbilityClass,
+  AbilityTuple,
+  ConditionsMatcher,
   ExtractSubjectType,
+  FieldMatcher,
   InferSubjects,
+  MatchConditions,
   MongoAbility,
+  MongoQuery,
   PureAbility,
   createMongoAbility,
+  subject,
 } from '@casl/ability';
 import {
   BadRequestException,
@@ -22,12 +28,13 @@ import { Order } from '../order/entities/order.entity';
 import { OrderService } from '../order/services/order.service';
 import { UserService } from '../user/services/user/user.service';
 import { UserRole } from '../user/constants/user.enum';
+import * as _ from 'lodash';
 
-type Subjects =
+type AppSubjects =
   | InferSubjects<typeof Shop | typeof User | typeof Product | typeof Order>
   | 'all';
 
-export type AppAbility = MongoAbility<[Action, Subjects]>;
+export type AppAbility = MongoAbility<[Action, AppSubjects]>;
 
 @Injectable()
 export class CaslAbilityFactory {
@@ -38,35 +45,51 @@ export class CaslAbilityFactory {
     private orderService: OrderService,
   ) {}
 
-  createForShop(user: any, shopId: number) {
-    const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
+  createForShop(user: User) {
+    const { can, cannot, build } = new AbilityBuilder<AppAbility>(
+      createMongoAbility,
+    );
 
-    if (user?.shopId === shopId) {
-      can(Action.Update, Shop);
-      can(Action.Read, Order);
-    } else {
-      can(Action.Read, Shop);
+    if (user.role === UserRole.ADMIN) {
+      can(Action.Manage, Shop);
+      can(Action.Delete, Shop);
+      can(Action.Manage, Product);
+      can(Action.Manage, Order);
     }
+    can(Action.Read, Shop);
+    can(Action.Update, Shop, { id: user.shop?.id });
+
+    can(Action.Update, Product, { shopId: user.shop?.id });
+    can(Action.Delete, Product, { shopId: user.shop?.id });
+
+    can(Action.Read, Order, { userId: user?.id });
+    can(Action.Read, Order, { shipperId: user?.id });
+    can(Action.Read, Order, { shopId: user.shop?.id });
+    can(Action.Update, Order, { userId: user?.id });
+    can(Action.Update, Order, { shipperId: user?.id });
+    can(Action.Update, Order, { shopId: user.shop?.id });
 
     return build({
-      detectSubjectType: (object) =>
-        object.constructor as ExtractSubjectType<Subjects>,
+      detectSubjectType: (item) =>
+        item.constructor as ExtractSubjectType<AppSubjects>,
     });
   }
 
-  async createForProduct(user: any, productId: number) {
+  async createForProduct(user: User) {
     const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
 
-    const foundProduct = await this.productService.findById(productId);
-
-    if (foundProduct.shop.id === user?.shopId) {
-      can(Action.Update, Product);
-      can(Action.Delete, Product);
+    if (user.role === UserRole.ADMIN) {
+      can(Action.Manage, Product);
     }
+    console.log('Check user:: ', user);
+    console.log('subject:: ', Product);
+
+    can(Action.Create, Product);
+    can(Action.Delete, Product, { shop: { id: user?.shop.id } });
 
     return build({
       detectSubjectType: (object) =>
-        object.constructor as ExtractSubjectType<Subjects>,
+        object.constructor as ExtractSubjectType<AppSubjects>,
     });
   }
 
@@ -107,7 +130,7 @@ export class CaslAbilityFactory {
 
     return build({
       detectSubjectType: (object) =>
-        object.constructor as ExtractSubjectType<Subjects>,
+        object.constructor as ExtractSubjectType<AppSubjects>,
     });
   }
 
@@ -127,7 +150,7 @@ export class CaslAbilityFactory {
 
     return build({
       detectSubjectType: (object) =>
-        object.constructor as ExtractSubjectType<Subjects>,
+        object.constructor as ExtractSubjectType<AppSubjects>,
     });
   }
 }

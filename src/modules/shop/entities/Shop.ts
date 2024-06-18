@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { Locate } from 'src/modules/geocoding/entities/Locate';
+import { User } from 'src/modules/user/entities/user.entity';
 import {
   BaseEntity,
   Column,

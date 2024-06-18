@@ -20,6 +20,8 @@ import { SignInDto } from '../dtos/auth.sign-in.dto';
 import { AccessTokenGuard } from '../guards/access-token.guard';
 import { ChangePasswordDto } from '../dtos/auth.change-password.dto';
 import { ForgotPasswordDto } from '../dtos/auth.forgot-password.dto';
+import { CurrentUser } from '../decorators/current-user.decorator';
+import { User } from '@sentry/node';
 
 @ApiBearerAuth()
 @ApiTags('auth')
@@ -51,8 +53,8 @@ export class AuthController {
   })
   @UseGuards(AccessTokenGuard)
   @Get('logout')
-  logout(@Req() req) {
-    return this.authService.logout(req.user['sub']);
+  logout(@CurrentUser() user: User) {
+    return this.authService.logout(+user.id);
   }
 
   @CustomResponse({
@@ -62,11 +64,13 @@ export class AuthController {
   @UseGuards(AccessTokenGuard)
   @Patch('change-password')
   async changePassword(
-    @Req() req,
+    @CurrentUser() user: any,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    const userId = req.user['sub'];
-    return await this.authService.changePassword(userId, changePasswordDto);
+    return await this.authService.changePassword(
+      +user['sub'],
+      changePasswordDto,
+    );
   }
 
   @CustomResponse({
