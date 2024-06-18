@@ -8,12 +8,14 @@ import { Category } from './entities/category.entity';
 import { CategoryRepository } from './repositories/category.repository';
 import { CategoryService } from './services/category.service';
 import { CaslModule } from '../casl/casl.module';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Product, Category]),
     TypeOrmModule.forFeature([ProductRepository, CategoryRepository]),
     forwardRef(() => CaslModule),
+    forwardRef(() => UserModule),
   ],
   controllers: [ProductController],
   providers: [

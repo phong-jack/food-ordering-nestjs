@@ -48,8 +48,10 @@ export class ShopService {
   ) {
     const shop = await this.findOneById(id);
 
-    if (abilities?.can(Action.Update, subject('Shop', shop))) {
-      throw new ForbiddenException('have hot permission');
+    if (!abilities?.can(Action.Update, subject('Shop', shop))) {
+      throw new ForbiddenException(
+        'You do not have permission to update this information because you do not own this shop.',
+      );
     }
 
     if (shop.address !== shopUpdateDto.address) {

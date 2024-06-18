@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
   UseInterceptors,
@@ -30,6 +31,11 @@ import { HttpCacheInteceptor } from 'src/common/interceptors/http-cache.intercep
 import { ConfigCache } from 'src/common/cache/decorators/cache.decorator';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
 import { ProductAuthorizeGuard } from 'src/modules/casl/guards/product.guard';
+import { ProductCreatePolicyHandler } from 'src/modules/casl/policies/product/product.create.policy';
+import { ProductUpdatePolicyHandler } from 'src/modules/casl/policies/product/product.update.policy';
+import { CurrentAbilities } from 'src/modules/casl/decorators/current-ability.decorator';
+import { ProductUpdateDto } from '../dtos/product.update.dto';
+import { ProductDeletePolicyHandler } from 'src/modules/casl/policies/product/product.delete.policy';
 
 @ApiBearerAuth()
 @ApiTags('product')
@@ -75,32 +81,58 @@ export class ProductController {
     statusCode: HttpStatus.CREATED,
   })
   @Roles(UserRole.SHOP)
-  @Post('create')
+  @Post('')
   async createProduct(@Body() productCreateDto: ProductCreateDto) {
     return await this.productService.createProduct(productCreateDto);
   }
 
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new ProductDeletePolicyHandler())
   @CustomResponse({
     message: 'Delete product success!',
     statusCode: HttpStatus.OK,
   })
   @Roles(UserRole.SHOP)
-  @Delete('delete/:id')
-  async deleteProduct(@Param('id', ParseIntPipe) id: number) {
-    await this.productService.deleteProduct(id);
+  @Delete(':id')
+  async deleteProduct(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentAbilities()
+    abilities: AppAbility,
+  ) {
+    await this.productService.deleteProduct(id, abilities);
   }
 
-  @UseGuards(ProductAuthorizeGuard)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, Product))
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new ProductUpdatePolicyHandler())
   @Patch('/change-status/:id')
   @Roles(UserRole.SHOP)
   async changeStatusProduct(
     @Param('id', ParseIntPipe) id: number,
     @Body() productChangeStatusDto: ProductChangeStatusDto,
+    @CurrentAbilities()
+    abilities: AppAbility,
   ) {
     return await this.productService.changeStatusProduct(
       id,
       productChangeStatusDto,
+      abilities,
+    );
+  }
+
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new ProductUpdatePolicyHandler())
+  @Roles(UserRole.SHOP)
+  @Put(':id')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() productUpdateDto: ProductUpdateDto,
+    @CurrentAbilities()
+    abilities: AppAbility,
+  ) {
+    return await this.productService.updateProduct(
+      id,
+      productUpdateDto,
+      abilities,
     );
   }
 }

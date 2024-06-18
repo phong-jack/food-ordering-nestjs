@@ -11,10 +11,12 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
+  RelationId,
   UpdateDateColumn,
 } from 'typeorm';
 import { OrderStatus } from './order-status.entity';
 import { OrderDetail } from './order-detail.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity('order')
 export class Order extends BaseEntity {
@@ -25,13 +27,25 @@ export class Order extends BaseEntity {
   @JoinColumn({ name: 'userId' })
   user: User;
 
+  @Exclude()
+  @RelationId((order: Order) => order.user)
+  userId: number;
+
   @ManyToOne((type) => User)
   @JoinColumn({ name: 'shipperId' })
   shipper: User;
 
+  @Exclude()
+  @RelationId((order: Order) => order.shipper)
+  shipperId: number;
+
   @ManyToOne((type) => Shop)
   @JoinColumn({ name: 'shopId' })
   shop: Shop;
+
+  @Exclude()
+  @RelationId((order: Order) => order.shop)
+  shopId: number;
 
   @ManyToOne((type) => OrderStatus)
   @JoinColumn({ name: 'orderStatusCode' })

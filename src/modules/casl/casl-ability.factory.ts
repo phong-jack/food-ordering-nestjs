@@ -4,9 +4,11 @@ import {
   AbilityTuple,
   ConditionsMatcher,
   ExtractSubjectType,
+  FieldMatcher,
   InferSubjects,
   MatchConditions,
   MongoAbility,
+  MongoQuery,
   PureAbility,
   createMongoAbility,
   subject,
@@ -26,12 +28,13 @@ import { Order } from '../order/entities/order.entity';
 import { OrderService } from '../order/services/order.service';
 import { UserService } from '../user/services/user/user.service';
 import { UserRole } from '../user/constants/user.enum';
+import * as _ from 'lodash';
 
 type AppSubjects =
   | InferSubjects<typeof Shop | typeof User | typeof Product | typeof Order>
   | 'all';
 
-export type AppAbility = PureAbility<[Action, AppSubjects]>;
+export type AppAbility = MongoAbility<[Action, AppSubjects]>;
 
 @Injectable()
 export class CaslAbilityFactory {
@@ -42,31 +45,47 @@ export class CaslAbilityFactory {
     private orderService: OrderService,
   ) {}
 
-  createForShop(user: User, shopId?: number) {
+  createForShop(user: User) {
     const { can, cannot, build } = new AbilityBuilder<AppAbility>(
       createMongoAbility,
     );
 
     if (user.role === UserRole.ADMIN) {
       can(Action.Manage, Shop);
+      can(Action.Delete, Shop);
+      can(Action.Manage, Product);
+      can(Action.Manage, Order);
     }
-    console.log('check Shop id:: ', user?.shop.id);
-
     can(Action.Read, Shop);
-    can(Action.Update, Shop, { id: user?.shop.id });
+    can(Action.Update, Shop, { id: user.shop?.id });
 
-    return build();
+    can(Action.Update, Product, { shopId: user.shop?.id });
+    can(Action.Delete, Product, { shopId: user.shop?.id });
+
+    can(Action.Read, Order, { userId: user?.id });
+    can(Action.Read, Order, { shipperId: user?.id });
+    can(Action.Read, Order, { shopId: user.shop?.id });
+    can(Action.Update, Order, { userId: user?.id });
+    can(Action.Update, Order, { shipperId: user?.id });
+    can(Action.Update, Order, { shopId: user.shop?.id });
+
+    return build({
+      detectSubjectType: (item) =>
+        item.constructor as ExtractSubjectType<AppSubjects>,
+    });
   }
 
-  async createForProduct(user: any, productId: number) {
+  async createForProduct(user: User) {
     const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
 
-    const foundProduct = await this.productService.findById(productId);
-
-    if (foundProduct.shop.id === user?.shopId) {
-      can(Action.Update, Product);
-      can(Action.Delete, Product);
+    if (user.role === UserRole.ADMIN) {
+      can(Action.Manage, Product);
     }
+    console.log('Check user:: ', user);
+    console.log('subject:: ', Product);
+
+    can(Action.Create, Product);
+    can(Action.Delete, Product, { shop: { id: user?.shop.id } });
 
     return build({
       detectSubjectType: (object) =>

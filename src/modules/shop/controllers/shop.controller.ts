@@ -42,7 +42,11 @@ import { RoleGuard } from 'src/modules/auth/guards/role.guard';
 import { Roles } from 'src/modules/auth/decorators/roles.decorator';
 import { UserRole } from 'src/modules/user/constants/user.enum';
 import { PaginateDto } from '../dtos/paginate.dto';
-import { ShopUpdatePolicyHanlder } from 'src/modules/casl/policies/shop/shop.update.policy';
+import {
+  ShopDeletePolicyHandler,
+  ShopFindDistancePolicyHanlder,
+  ShopUpdatePolicyHandler,
+} from 'src/modules/casl/policies/shop/shop.policy';
 import { CurrentAbilities } from 'src/modules/casl/decorators/current-ability.decorator';
 
 @UseGuards(AccessTokenGuard)
@@ -92,23 +96,23 @@ export class ShopController {
   }
 
   @UseGuards(PoliciesGuard)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, Shop))
+  @CheckPolicies(new ShopFindDistancePolicyHanlder())
   @CustomResponse({
     message: 'Created shop!',
     statusCode: HttpStatus.CREATED,
   })
-  @Post('create')
+  @Post('')
   async createShop(@Body() shopCreateDto: ShopCreateDto) {
     return await this.shopService.createShop(shopCreateDto);
   }
 
   @UseGuards(PoliciesGuard)
-  @CheckPolicies(new ShopUpdatePolicyHanlder())
+  @CheckPolicies(new ShopUpdatePolicyHandler())
   @CustomResponse({
     message: 'Updated shop!',
     statusCode: HttpStatus.CREATED,
   })
-  @Put('update/:id')
+  @Put(':id')
   async updateShop(
     @Param('id', ParseIntPipe) id: number,
     @Body() shopUpdateDto: ShopUpdateDto,
@@ -119,12 +123,12 @@ export class ShopController {
   }
 
   @UseGuards(PoliciesGuard)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, Shop))
+  @CheckPolicies(new ShopDeletePolicyHandler())
   @CustomResponse({
     message: 'Delete shop success!',
     statusCode: HttpStatus.OK,
   })
-  @Delete('delete/:id')
+  @Delete(':id')
   async deleteShop(@Param('id', ParseIntPipe) id: number) {
     return await this.shopService.deleteShop(id);
   }

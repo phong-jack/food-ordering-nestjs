@@ -31,6 +31,11 @@ import { Order } from '../entities/order.entity';
 import { Action } from 'src/modules/casl/constants/casl.constant';
 import { AppAbility } from 'src/modules/casl/casl-ability.factory';
 import { PoliciesGuard } from 'src/modules/casl/guards/policy.guard';
+import { CurrentAbilities } from 'src/modules/casl/decorators/current-ability.decorator';
+import { OrderUpdatePolicyHandler } from 'src/modules/casl/policies/order/order.update.policy';
+import { OrderReadPolicyHandler } from 'src/modules/casl/policies/order/order.read.policy';
+import { CurrentUser } from 'src/modules/auth/decorators/current-user.decorator';
+import { User } from '@sentry/node';
 
 @UseGuards(AccessTokenGuard, RoleGuard)
 @ApiBearerAuth()
@@ -39,9 +44,9 @@ import { PoliciesGuard } from 'src/modules/casl/guards/policy.guard';
 export class OrderController {
   constructor(private orderService: OrderService) {}
 
+  @UseGuards(OrderAuthorizeGuard)
+  @CheckPolicies(new OrderReadPolicyHandler())
   @Roles(UserRole.SHOP, UserRole.USER, UserRole.SHIPPER, UserRole.ADMIN)
-  @ConfigCache({ cacheKey: 'order.find', eachUserConfig: true })
-  @UseInterceptors(HttpCacheInteceptor)
   @CustomResponse({ message: 'Get order success', statusCode: HttpStatus.OK })
   @Get(':id')
   async findById(@Param('id', ParseIntPipe) id: number) {
@@ -51,30 +56,18 @@ export class OrderController {
   @Roles(UserRole.USER)
   @CustomResponse({ message: 'Created order', statusCode: HttpStatus.CREATED })
   @Post()
-  async createOrder(@Req() req, @Body() orderCreateDto: OrderCreateDto) {
+  async createOrder(
+    @CurrentUser() user: any,
+    @Body() orderCreateDto: OrderCreateDto,
+  ) {
     return await this.orderService.createOrder({
       ...orderCreateDto,
-      userId: +req.user['sub'],
+      userId: +user['sub'],
     });
   }
 
-  // @UseGuards(OrderAuthorizeGuard)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, Order))
-  // @Roles(UserRole.SHOP, UserRole.USER)
-  // @CustomResponse({
-  //   message: 'Change order status success',
-  //   statusCode: HttpStatus.OK,
-  // })
-  // @Patch('change-status/:id')
-  // async changeStatus(
-  //   @Param('id', ParseIntPipe) id: number,
-  //   @Body() orderChangeStatusDto: OrderChangeStatusDto,
-  // ) {
-  //   return await this.orderService.changeStatus(id, orderChangeStatusDto);
-  // }
-
-  @UseGuards(OrderAuthorizeGuard)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, Order))
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new OrderUpdatePolicyHandler())
   @Roles(UserRole.USER, UserRole.ADMIN)
   @CustomResponse({
     message: 'User change order status success',
@@ -84,15 +77,18 @@ export class OrderController {
   async userChangeOrderStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body() orderChangeStatusDto: OrderChangeStatusDto,
+    @CurrentAbilities()
+    abilities: AppAbility,
   ) {
     return await this.orderService.userChangeOrderStatus(
       id,
       orderChangeStatusDto,
+      abilities,
     );
   }
 
-  @UseGuards(OrderAuthorizeGuard)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, Order))
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new OrderUpdatePolicyHandler())
   @Roles(UserRole.SHIPPER, UserRole.ADMIN)
   @CustomResponse({
     message: 'Shipper change order status success',
@@ -102,15 +98,18 @@ export class OrderController {
   async shipperChangeOrderStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body() orderChangeStatusDto: OrderChangeStatusDto,
+    @CurrentAbilities()
+    abilities: AppAbility,
   ) {
     return await this.orderService.shipperChangeOrderStatus(
       id,
       orderChangeStatusDto,
+      abilities,
     );
   }
 
-  @UseGuards(OrderAuthorizeGuard)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, Order))
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new OrderUpdatePolicyHandler())
   @Roles(UserRole.SHOP, UserRole.ADMIN)
   @CustomResponse({
     message: 'Shop change order status success',
@@ -120,15 +119,18 @@ export class OrderController {
   async shopChangeOrderStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body() orderChangeStatusDto: OrderChangeStatusDto,
+    @CurrentAbilities()
+    abilities: AppAbility,
   ) {
     return await this.orderService.shopChangeOrderStatus(
       id,
       orderChangeStatusDto,
+      abilities,
     );
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, Order))
+  @UseGuards(OrderAuthorizeGuard)
+  @CheckPolicies(new OrderReadPolicyHandler())
   @Roles(UserRole.SHOP)
   @CustomResponse({
     message: 'Get report success',
