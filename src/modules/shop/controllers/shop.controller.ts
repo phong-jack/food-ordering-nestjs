@@ -13,9 +13,10 @@ import {
   Req,
   UseGuards,
   UseInterceptors,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ShopService } from '../services/shop.service';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CustomResponse } from 'src/common/decorators/custom-response.interceptor';
 import { ShopCreateDto } from '../dtos/shop.create.dto';
 import { ShopUpdateDto } from '../dtos/shop.update.dto';
@@ -42,12 +43,19 @@ import { RoleGuard } from 'src/modules/auth/guards/role.guard';
 import { Roles } from 'src/modules/auth/decorators/roles.decorator';
 import { UserRole } from 'src/modules/user/constants/user.enum';
 import { PaginateDto } from '../dtos/paginate.dto';
+
+import { PaginationDto } from 'src/utils/dtos/pagination.dto';
 import {
   ShopDeletePolicyHandler,
   ShopFindDistancePolicyHanlder,
   ShopUpdatePolicyHandler,
 } from 'src/modules/casl/policies/shop/shop.policy';
 import { CurrentAbilities } from 'src/modules/casl/decorators/current-ability.decorator';
+import { CurrentUser } from 'src/modules/auth/decorators/current-user.decorator';
+import { ShopSearchDto } from '../dtos/shop.search.dto';
+import { stringArrayToArray } from 'src/utils';
+import { IsNotEmpty } from 'class-validator';
+import { ShopFilterDto } from '../dtos/shop.filter.dto';
 
 @UseGuards(AccessTokenGuard)
 @ApiBearerAuth()
@@ -75,12 +83,104 @@ export class ShopController {
   @Roles(UserRole.USER)
   @Get('find-distance')
   async findShopByDistance(
-    @Req() req,
+    @CurrentUser() user: any,
     @Query('page', ParseIntPipe) page: number,
     @Query('limit', ParseIntPipe) limit: number,
   ) {
-    const userId = req.user['sub'];
-    return await this.shopService.findShopByDistance(userId, page, limit);
+    return await this.shopService.findShopByDistance(+user['sub'], page, limit);
+  }
+
+  @ApiQuery({
+    name: 'keyword',
+    required: true,
+    type: String,
+    example: 'Trà sữa',
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    type: String,
+    examples: {
+      name: {
+        value: 'name',
+        description: 'Sort by name',
+      },
+    },
+  })
+  @ApiQuery({
+    name: 'orderBy',
+    required: false,
+    type: String,
+    examples: {
+      ASC: { value: 'ASC', description: 'order by ASC' },
+      DESC: { value: 'DESC', description: 'order by DESC' },
+    },
+  })
+  @Public()
+  @CustomResponse({
+    message: 'Get shop success!',
+    statusCode: HttpStatus.OK,
+  })
+  @Get('search')
+  async searchShopWithProduct(@Query() shopSearchDto: ShopSearchDto) {
+    return await this.shopService.searchShopWithProduct(shopSearchDto);
+  }
+
+  @ApiParam({
+    name: 'categoryIds',
+    required: true,
+    examples: {
+      oneCategory: {
+        value: '3',
+        description: 'filter shop have category id =3',
+      },
+      multiCategory: {
+        value: '2,3',
+        description:
+          'filter shop have category id 3 and 2 ... with delimiter ","',
+      },
+    },
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    type: String,
+    examples: {
+      name: {
+        value: 'name',
+        description: 'Sort by name',
+      },
+    },
+  })
+  @ApiQuery({
+    name: 'orderBy',
+    required: false,
+    type: String,
+    examples: {
+      ASC: { value: 'ASC', description: 'order by ASC' },
+      DESC: { value: 'DESC', description: 'order by DESC' },
+    },
+  })
+  @Public()
+  @CustomResponse({
+    message: 'Get shop success!',
+    statusCode: HttpStatus.OK,
+  })
+  @Get('filter/:categoryIds')
+  async filterShopWithCategory(
+    @Param('categoryIds') categoryIds: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    const categoryIdsArray = stringArrayToArray(categoryIds, ',');
+
+    return await this.shopService.filterShopWithCategory(
+      categoryIdsArray,
+      paginationDto,
+    );
   }
 
   @Public()

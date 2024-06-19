@@ -1,11 +1,14 @@
 import { faker } from '@faker-js/faker';
+import { Exclude } from 'class-transformer';
 import { Locate } from 'src/modules/geocoding/entities/Locate';
+import { Product } from 'src/modules/product/entities/product.entity';
 import { User } from 'src/modules/user/entities/user.entity';
 import {
   BaseEntity,
   Column,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
@@ -37,4 +40,7 @@ export class Shop extends BaseEntity {
   @OneToOne(() => Locate)
   @JoinColumn({ name: 'locateId' })
   locate: Relation<Locate>;
+
+  @OneToMany(() => Product, (product) => product.shop) // Define the one-to-many relationship
+  products: Relation<Product[]>;
 }
