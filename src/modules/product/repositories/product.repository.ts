@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, FindOperator, Repository } from 'typeorm';
 import { Product } from '../entities/product.entity';
 import { ProductCreateDto } from '../dtos/product.create.dto';
 import { ProductUpdateDto } from '../dtos/product.update.dto';
@@ -64,5 +64,28 @@ export class ProductRepository extends BaseRepositoryAbstract<Product> {
     if (!product) throw new BadRequestException('Product not found!');
     product.isAlready = productChangeStatusDto.isAlready;
     return await this.productRepository.save(product);
+  }
+
+  async searchProductsInShop(
+    shopId: number,
+    keyword: string,
+  ): Promise<Product[]> {
+    const regexKeyword = `%${keyword.toLowerCase()}%`;
+
+    const products = await this.productRepository
+      .createQueryBuilder('product')
+      .leftJoin('product.shop', 'shop')
+      .where('shop.id = :shopId', { shopId })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('product.name LIKE :regexKeyword', { regexKeyword }).orWhere(
+            'product.description LIKE :regexKeyword',
+            { regexKeyword },
+          );
+        }),
+      )
+      .getMany();
+
+    return products;
   }
 }

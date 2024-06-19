@@ -67,6 +67,19 @@ export class ProductController {
     return await this.productService.findByShop(shopId);
   }
 
+  @Public()
+  @CustomResponse({
+    message: 'Get products success!',
+    statusCode: HttpStatus.OK,
+  })
+  @Get('search-in-shop')
+  async searchProductsInShop(
+    @Query('shopId', ParseIntPipe) shopId: number,
+    @Query('keyword') keyword: string,
+  ) {
+    return await this.productService.searchProductsInShop(shopId, keyword);
+  }
+
   @CustomResponse({
     message: 'Get product success!',
     statusCode: HttpStatus.OK,
