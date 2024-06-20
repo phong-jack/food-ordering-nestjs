@@ -63,10 +63,14 @@ export class OrderService {
       ),
     );
 
-    this.eventEmitter.emit(SERVER_EVENTS.ORDER_CREATE, order.id);
     const totalAmount = await this.calculatorTotalAmount(order.id);
 
+    const timeHandleRiskOrder = 60 * 60 * 1000; // 1 hour
+    this.eventEmitter.emit(SERVER_EVENTS.ORDER_CREATE, order.id);
     this.orderQueue.add('order-find-shipper', order);
+    this.orderQueue.add('order-risk-queue', order, {
+      delay: timeHandleRiskOrder,
+    });
 
     return await this.findById(order.id);
   }
@@ -159,6 +163,11 @@ export class OrderService {
     await this.changeStatus(id, orderChangeStatusDto);
 
     return await this.findById(id);
+  }
+
+  async updateRiskStatus(id: number) {
+    await this.changeStatus(id, { statusCode: ORDER_STATUS.RISK });
+    return this.findById(id);
   }
 
   async changeStatus(id: number, orderChangeStatusDto: OrderChangeStatusDto) {

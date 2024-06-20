@@ -72,8 +72,6 @@ export class OrderRepository extends BaseRepositoryAbstract<Order> {
   }
 
   async changeStatus(id: number, { statusCode }: OrderChangeStatusDto) {
-    console.log('Check status:: ', statusCode);
-
     return await this.orderRepository.save({
       id: id,
       orderStatus: { statusCode: statusCode },

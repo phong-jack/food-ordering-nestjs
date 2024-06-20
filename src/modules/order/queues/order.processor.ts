@@ -44,6 +44,8 @@ export class OrderProcessor extends WorkerHost {
       switch (job.name) {
         case 'order-find-shipper':
           return await this.handleFindShipper(order);
+        case 'order-risk-queue':
+          return await this.handleRiskQueue(order);
         default:
           throw new Error('No job name match');
       }
@@ -117,6 +119,20 @@ export class OrderProcessor extends WorkerHost {
       await this.orderService.changeStatus(order.id, {
         statusCode: ORDER_STATUS.CANCEL,
       });
+    }
+  }
+
+  async handleRiskQueue(order: Order) {
+    const orderEndStatus = [
+      ORDER_STATUS.FINISHED,
+      ORDER_STATUS.REJECTED,
+      ORDER_STATUS.RISK,
+    ];
+
+    this.logger.log('Check risk');
+    const orderNow = await this.orderService.findById(order.id);
+    if (!orderEndStatus.includes(orderNow.orderStatus.statusCode)) {
+      await this.orderService.updateRiskStatus(order.id);
     }
   }
 
