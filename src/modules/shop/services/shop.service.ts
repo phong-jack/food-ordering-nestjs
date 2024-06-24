@@ -4,7 +4,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { ShopRepository } from '../repositories/shop.repository';
-import { Shop } from '../entities/Shop';
+import { Shop } from '../entities/shop.entity';
 import { ShopUpdateDto } from '../dtos/shop.update.dto';
 import { ShopCreateDto } from '../dtos/shop.create.dto';
 import { GeocodingService } from 'src/modules/geocoding/service/geocoding.service';

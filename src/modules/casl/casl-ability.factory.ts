@@ -21,7 +21,7 @@ import {
 } from '@nestjs/common';
 import { User } from '../user/entities/user.entity';
 import { Action } from './constants/casl.constant';
-import { Shop } from '../shop/entities/Shop';
+import { Shop } from '../shop/entities/shop.entity';
 import { Product } from '../product/entities/product.entity';
 import { ProductService } from '../product/services/product.service';
 import { Order } from '../order/entities/order.entity';

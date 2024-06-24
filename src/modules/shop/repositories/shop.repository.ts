@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Shop } from '../entities/Shop';
+import { Shop } from '../entities/shop.entity';
 import { Brackets, FindManyOptions, Repository } from 'typeorm';
 import { ShopCreateDto } from '../dtos/shop.create.dto';
 import { ShopUpdateDto } from '../dtos/shop.update.dto';
@@ -126,10 +126,13 @@ export class ShopRepository extends BaseRepositoryAbstract<Shop> {
       .createQueryBuilder('shop')
       .leftJoin('shop.products', 'product')
       .leftJoin('product.category', 'category')
-      .where('category.id IN (:...categoryIds)', { categoryIds })
       .take(limit)
       .skip(skip)
       .orderBy(sortField, orderBy);
+
+    if (categoryIds.length !== 0) {
+      queryBuilder.where('category.id IN (:...categoryIds)', { categoryIds });
+    }
 
     const shops = await queryBuilder.getManyAndCount();
     return shops;

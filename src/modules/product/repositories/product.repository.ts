@@ -70,7 +70,8 @@ export class ProductRepository extends BaseRepositoryAbstract<Product> {
     shopId: number,
     keyword: string,
   ): Promise<Product[]> {
-    const regexKeyword = `%${keyword.toLowerCase()}%`;
+    const textQuery = keyword ? keyword : '';
+    const regexKeyword = `%${textQuery.toLowerCase()}%`;
 
     const products = await this.productRepository
       .createQueryBuilder('product')

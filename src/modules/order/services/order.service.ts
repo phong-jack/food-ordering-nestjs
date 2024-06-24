@@ -75,6 +75,10 @@ export class OrderService {
     return await this.findById(order.id);
   }
 
+  async findByShop(shopId: number, page: number, limit: number) {
+    return await this.orderRepository.findByShop(shopId, page, limit);
+  }
+
   async findById(id: number): Promise<Order> {
     return await this.orderRepository.findById(id);
   }

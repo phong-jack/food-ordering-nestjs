@@ -89,6 +89,30 @@ export class AuthService {
     return await this.userService.update(userId, { refreshToken: null });
   }
 
+  async refreshTokens(userId: number, refreshToken: string) {
+    const user = await this.userService.findById(userId);
+    if (!user || !user.refreshToken) {
+      throw new ForbiddenException('Access Denied');
+    }
+
+    const refreshTokenMatches = await argon2.verify(
+      user.refreshToken,
+      refreshToken,
+    );
+
+    if (!refreshTokenMatches) throw new ForbiddenException('Token not valid');
+
+    const tokens = await this.getTokens(
+      user.id,
+      user.username,
+      user.role,
+      user.shop?.id,
+    );
+
+    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    return tokens;
+  }
+
   async changePassword(userId: number, changePasswordDto: ChangePasswordDto) {
     const validPassword =
       changePasswordDto.password === changePasswordDto.rePassword;

@@ -34,7 +34,7 @@ import { CheckPolicies } from 'src/modules/casl/decorators/casl.decorator';
 import { Action } from 'src/modules/casl/constants/casl.constant';
 import { User } from 'src/modules/user/entities/user.entity';
 import { AccessTokenGuard } from 'src/modules/auth/guards/access-token.guard';
-import { Shop } from '../entities/Shop';
+import { Shop } from '../entities/shop.entity';
 import { AppAbility } from 'src/modules/casl/casl-ability.factory';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
 import { ShopLocateUpdateDto } from '../dtos/shop-locate.update.dto';
@@ -53,7 +53,7 @@ import {
 import { CurrentAbilities } from 'src/modules/casl/decorators/current-ability.decorator';
 import { CurrentUser } from 'src/modules/auth/decorators/current-user.decorator';
 import { ShopSearchDto } from '../dtos/shop.search.dto';
-import { stringArrayToArray } from 'src/utils';
+import { categoryIdsToArray, stringArrayToArray } from 'src/utils';
 import { IsNotEmpty } from 'class-validator';
 import { ShopFilterDto } from '../dtos/shop.filter.dto';
 
@@ -130,7 +130,7 @@ export class ShopController {
 
   @ApiParam({
     name: 'categoryIds',
-    required: true,
+    required: false,
     examples: {
       oneCategory: {
         value: '3',
@@ -140,6 +140,10 @@ export class ShopController {
         value: '2,3',
         description:
           'filter shop have category id 3 and 2 ... with delimiter ","',
+      },
+      allCategory: {
+        value: 'all',
+        description: 'Filter no category (Get all shop)',
       },
     },
   })
@@ -175,7 +179,7 @@ export class ShopController {
     @Param('categoryIds') categoryIds: string,
     @Query() paginationDto: PaginationDto,
   ) {
-    const categoryIdsArray = stringArrayToArray(categoryIds, ',');
+    const categoryIdsArray = categoryIdsToArray(categoryIds, ',');
 
     return await this.shopService.filterShopWithCategory(
       categoryIdsArray,

@@ -1,4 +1,3 @@
-import { Shop } from 'src/modules/shop/entities/Shop';
 import { User } from 'src/modules/user/entities/user.entity';
 import {
   BaseEntity,
@@ -17,6 +16,7 @@ import {
 import { OrderStatus } from './order-status.entity';
 import { OrderDetail } from './order-detail.entity';
 import { Exclude } from 'class-transformer';
+import { Shop } from 'src/modules/shop/entities/shop.entity';
 
 @Entity('order')
 export class Order extends BaseEntity {
@@ -41,7 +41,7 @@ export class Order extends BaseEntity {
 
   @ManyToOne((type) => Shop)
   @JoinColumn({ name: 'shopId' })
-  shop: Shop;
+  shop: Relation<Shop>;
 
   @Exclude()
   @RelationId((order: Order) => order.shop)

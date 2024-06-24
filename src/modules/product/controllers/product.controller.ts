@@ -67,6 +67,7 @@ export class ProductController {
     return await this.productService.findByShop(shopId);
   }
 
+  @ApiQuery({ name: 'keyword', required: false, type: String, example: 'Trà' })
   @Public()
   @CustomResponse({
     message: 'Get products success!',
@@ -75,7 +76,7 @@ export class ProductController {
   @Get('search-in-shop')
   async searchProductsInShop(
     @Query('shopId', ParseIntPipe) shopId: number,
-    @Query('keyword') keyword: string,
+    @Query('keyword') keyword?: string,
   ) {
     return await this.productService.searchProductsInShop(shopId, keyword);
   }
@@ -84,7 +85,7 @@ export class ProductController {
     message: 'Get product success!',
     statusCode: HttpStatus.OK,
   })
-  @Get(':id')
+  @Get('detail/:id')
   async findById(@Param('id', ParseIntPipe) id: number) {
     return await this.productService.findById(id);
   }
