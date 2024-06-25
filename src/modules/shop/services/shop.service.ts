@@ -44,6 +44,8 @@ export class ShopService {
     return await this.shopRepository.findOneById(id);
   }
 
+  async findCategoryByShop(shopId: number) {}
+
   async updateShop(
     id: number,
     shopUpdateDto: ShopUpdateDto,
