@@ -40,6 +40,13 @@ export class AuthService {
     if (userExist) {
       throw new BadRequestException('This username already exist');
     }
+    const isUsedPhone = await this.userService.findOneByPhone(
+      userCreateDto.phone,
+    );
+    if (isUsedPhone) {
+      throw new BadRequestException('This phone already used');
+    }
+
     const hashPassword = await this.hashData(userCreateDto.password);
     const newUser = await this.userService.create({
       ...userCreateDto,
@@ -109,8 +116,12 @@ export class AuthService {
       user.shop?.id,
     );
 
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
+    const newTokens = {
+      ...tokens,
+      refreshToken: refreshToken,
+    };
+
+    return newTokens;
   }
 
   async changePassword(userId: number, changePasswordDto: ChangePasswordDto) {

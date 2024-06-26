@@ -4,6 +4,9 @@ import { User } from '../../entities/user.entity';
 import { UserCreateDto } from '../../dtos/user.create.dto';
 import { UserUpdateDto } from '../../dtos/user.update.dto';
 import { FindOptionsWhere } from 'typeorm';
+import { UserChangePasswordDto } from '@modules/user/dtos/user.change-password.dto';
+import argon2, { hash } from 'argon2';
+import passport from 'passport';
 
 @Injectable()
 export class UserService {
@@ -42,6 +45,11 @@ export class UserService {
     return user;
   }
 
+  async findOneByPhone(phone: string): Promise<User> {
+    const user = await this.userRepository.findOneBy({ phone });
+    return user;
+  }
+
   async create(userCreateDto: UserCreateDto): Promise<User> {
     const userByEmail = await this.findOneByEmail(userCreateDto.email);
     if (userByEmail) throw new BadRequestException('This email already exist');
@@ -60,5 +68,30 @@ export class UserService {
   async update(id: number, userUpdateDto: UserUpdateDto): Promise<User> {
     const updatedUser = await this.userRepository.update(id, userUpdateDto);
     return updatedUser;
+  }
+
+  async changePassword(
+    id: number,
+    userChangePasswordDto: UserChangePasswordDto,
+  ) {
+    const validPassword =
+      userChangePasswordDto.password === userChangePasswordDto.rePassword;
+    if (!validPassword)
+      throw new BadRequestException('Password does not match!');
+
+    const user = await this.findById(id);
+    const isDuplicatePassword = await argon2.verify(
+      user.password,
+      userChangePasswordDto.password,
+    );
+    if (isDuplicatePassword)
+      throw new BadRequestException(
+        'Password used, plase re type new password',
+      );
+
+    const hashPassword = await hash(userChangePasswordDto.password);
+    return await this.update(id, {
+      password: hashPassword,
+    });
   }
 }

@@ -79,7 +79,21 @@ export class ProductController {
     return await this.productService.findByShop(shopId);
   }
 
-  @ApiQuery({ name: 'keyword', required: false, type: String, example: 'Trà' })
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+    type: String,
+    examples: {
+      keyword: {
+        value: 'Trà',
+        description: 'search with key word',
+      },
+      nonKeyword: {
+        value: '',
+        description: 'search with no keyword',
+      },
+    },
+  })
   @Public()
   @CustomResponse({
     message: 'Get products success!',

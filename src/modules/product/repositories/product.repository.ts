@@ -76,6 +76,7 @@ export class ProductRepository extends BaseRepositoryAbstract<Product> {
     const products = await this.productRepository
       .createQueryBuilder('product')
       .leftJoin('product.shop', 'shop')
+      .leftJoinAndSelect('product.category', 'category')
       .where('shop.id = :shopId', { shopId })
       .andWhere(
         new Brackets((qb) => {
