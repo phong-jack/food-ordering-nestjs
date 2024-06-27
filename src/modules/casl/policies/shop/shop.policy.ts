@@ -1,4 +1,4 @@
-import { Shop } from 'src/modules/shop/entities/Shop';
+import { Shop } from 'src/modules/shop/entities/shop.entity';
 import { AppAbility } from '../../casl-ability.factory';
 import { Action } from '../../constants/casl.constant';
 import { IPolicyHandler } from '../../interfaces/casl.interface';

@@ -1,7 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { ShopService } from './services/shop.service';
 import { ShopRepository } from './repositories/shop.repository';
-import { Shop } from './entities/Shop';
+import { Shop } from './entities/shop.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ShopController } from './controllers/shop.controller';
 import { CaslModule } from '../casl/casl.module';

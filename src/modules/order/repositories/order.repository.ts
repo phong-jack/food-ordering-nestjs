@@ -33,6 +33,31 @@ export class OrderRepository extends BaseRepositoryAbstract<Order> {
     });
   }
 
+  async findByShop(
+    shopId: number,
+    page: number,
+    limit: number,
+  ): Promise<[Order[], number]> {
+    const skip = (page - 1) * limit;
+    console.log('Check query:: ', { page, limit, skip });
+
+    const queryBuilder = await this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.user', 'user')
+      .leftJoin('order.shop', 'shop')
+      .leftJoinAndSelect('order.shipper', 'shipper')
+      .leftJoinAndSelect('order.orderDetails', 'orderDetail')
+      .leftJoinAndSelect('orderDetail.product', 'product')
+      .where('shop.id = :shopId', { shopId })
+      .take(limit)
+      .skip(skip)
+      .orderBy('order.updatedAt', 'DESC');
+
+    const orders = await queryBuilder.getManyAndCount();
+
+    return orders;
+  }
+
   async updateOrder(
     id: number,
     orderUpdateDto: OrderUpdateDto,
@@ -72,8 +97,6 @@ export class OrderRepository extends BaseRepositoryAbstract<Order> {
   }
 
   async changeStatus(id: number, { statusCode }: OrderChangeStatusDto) {
-    console.log('Check status:: ', statusCode);
-
     return await this.orderRepository.save({
       id: id,
       orderStatus: { statusCode: statusCode },

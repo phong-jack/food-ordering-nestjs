@@ -6,10 +6,11 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Relation,
   RelationId,
 } from 'typeorm';
 import { Category } from './category.entity';
-import { Shop } from 'src/modules/shop/entities/Shop';
+import { Shop } from 'src/modules/shop/entities/shop.entity';
 import { Exclude } from 'class-transformer';
 
 @Entity({ name: 'product' })
@@ -38,7 +39,7 @@ export class Product extends BaseEntity {
 
   @ManyToOne((type) => Shop)
   @JoinColumn({ name: 'shopId' })
-  shop: Shop;
+  shop: Relation<Shop>;
 
   @Exclude()
   @RelationId((product: Product) => product.shop)

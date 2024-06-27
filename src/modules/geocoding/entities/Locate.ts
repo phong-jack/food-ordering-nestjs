@@ -1,4 +1,4 @@
-import { Shop } from 'src/modules/shop/entities/Shop';
+import { Shop } from 'src/modules/shop/entities/shop.entity';
 import {
   Column,
   Entity,

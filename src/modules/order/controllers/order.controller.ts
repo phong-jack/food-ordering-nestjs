@@ -44,11 +44,29 @@ import { User } from '@sentry/node';
 export class OrderController {
   constructor(private orderService: OrderService) {}
 
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @Roles(UserRole.SHOP, UserRole.ADMIN)
+  @CustomResponse({
+    message: 'Get orders by shop success!',
+    statusCode: HttpStatus.OK,
+  })
+  @Get('shop/:shopId')
+  async findByShop(
+    @Param('shopId', ParseIntPipe) shopId: number,
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+  ) {
+    console.log('Check query:: ', { page, limit });
+
+    return await this.orderService.findByShop(shopId, page, limit);
+  }
+
   @UseGuards(OrderAuthorizeGuard)
   @CheckPolicies(new OrderReadPolicyHandler())
   @Roles(UserRole.SHOP, UserRole.USER, UserRole.SHIPPER, UserRole.ADMIN)
   @CustomResponse({ message: 'Get order success', statusCode: HttpStatus.OK })
-  @Get(':id')
+  @Get('detail/:id')
   async findById(@Param('id', ParseIntPipe) id: number) {
     return await this.orderService.findById(id);
   }

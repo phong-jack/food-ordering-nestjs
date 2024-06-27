@@ -9,6 +9,8 @@ import { CategoryRepository } from './repositories/category.repository';
 import { CategoryService } from './services/category.service';
 import { CaslModule } from '../casl/casl.module';
 import { UserModule } from '../user/user.module';
+import { CategoryController } from './controllers/category.controller';
+import { CloudinaryModule } from '@modules/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -16,8 +18,9 @@ import { UserModule } from '../user/user.module';
     TypeOrmModule.forFeature([ProductRepository, CategoryRepository]),
     forwardRef(() => CaslModule),
     forwardRef(() => UserModule),
+    CloudinaryModule,
   ],
-  controllers: [ProductController],
+  controllers: [ProductController, CategoryController],
   providers: [
     ProductService,
     CategoryService,
