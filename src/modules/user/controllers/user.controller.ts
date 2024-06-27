@@ -31,6 +31,8 @@ import { PoliciesGuard } from 'src/modules/casl/guards/policy.guard';
 import { UserAuthorizeGuard } from 'src/modules/casl/guards/user.guard';
 import { UserChangePasswordDto } from '../dtos/user.change-password.dto';
 import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
+import { CurrentAbilities } from '@modules/casl/decorators/current-ability.decorator';
+import { UserUpdatePolicy } from '@modules/casl/policies/user/user.update.policy';
 
 @ApiBearerAuth()
 @UseGuards(AccessTokenGuard)
@@ -94,16 +96,22 @@ export class UserController {
     return updatedUser;
   }
 
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new UserUpdatePolicy())
   @CustomResponse({
     message: 'Change user password successfull!',
     statusCode: HttpStatus.OK,
   })
   @Patch(':id/change-password')
   async changePassword(
-    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: number,
     @Body() userChangePasswordDto: UserChangePasswordDto,
+    @CurrentAbilities() abilities: AppAbility,
   ) {
-    const userId = user['sub'];
-    return await this.userService.changePassword(userId, userChangePasswordDto);
+    return await this.userService.changePassword(
+      id,
+      userChangePasswordDto,
+      abilities,
+    );
   }
 }

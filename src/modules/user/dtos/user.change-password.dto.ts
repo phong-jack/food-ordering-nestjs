@@ -10,7 +10,7 @@ export class UserChangePasswordDto {
   @IsNotEmpty()
   @IsString()
   @Length(6, 50)
-  password: string;
+  oldPassword: string;
 
   @ApiProperty({
     example: '123456',
@@ -19,5 +19,14 @@ export class UserChangePasswordDto {
   @IsNotEmpty()
   @IsString()
   @Length(6, 50)
-  rePassword: string;
+  newPassword: string;
+
+  @ApiProperty({
+    example: '123456',
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsString()
+  @Length(6, 50)
+  confirmNewPassword: string;
 }

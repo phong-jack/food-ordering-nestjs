@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { UserRepository } from '../../repositories/user.repository';
 import { User } from '../../entities/user.entity';
 import { UserCreateDto } from '../../dtos/user.create.dto';
@@ -7,6 +11,8 @@ import { FindOptionsWhere } from 'typeorm';
 import { UserChangePasswordDto } from '@modules/user/dtos/user.change-password.dto';
 import argon2, { hash } from 'argon2';
 import passport from 'passport';
+import { AppAbility } from '@modules/casl/casl-ability.factory';
+import { Action } from '@modules/casl/constants/casl.constant';
 
 @Injectable()
 export class UserService {
@@ -73,23 +79,39 @@ export class UserService {
   async changePassword(
     id: number,
     userChangePasswordDto: UserChangePasswordDto,
+    abilities: AppAbility,
   ) {
-    const validPassword =
-      userChangePasswordDto.password === userChangePasswordDto.rePassword;
-    if (!validPassword)
-      throw new BadRequestException('Password does not match!');
+    const { oldPassword, newPassword, confirmNewPassword } =
+      userChangePasswordDto;
 
     const user = await this.findById(id);
-    const isDuplicatePassword = await argon2.verify(
+    if (!abilities?.can(Action.Update, user)) {
+      throw new ForbiddenException('Not have permission change this resource');
+    }
+
+    const isTrueOldPassword = await argon2.verify(user.password, oldPassword);
+    if (!isTrueOldPassword) {
+      throw new BadRequestException(
+        'Not true old password, please re type password',
+      );
+    }
+
+    const isPasswordMatch = newPassword === confirmNewPassword;
+    if (!isPasswordMatch) {
+      throw new BadRequestException('Password does not match!');
+    }
+
+    const isNewPasswordSameAsOld = await argon2.verify(
       user.password,
-      userChangePasswordDto.password,
+      newPassword,
     );
-    if (isDuplicatePassword)
+    if (isNewPasswordSameAsOld) {
       throw new BadRequestException(
         'Password used, plase re type new password',
       );
+    }
 
-    const hashPassword = await hash(userChangePasswordDto.password);
+    const hashPassword = await hash(newPassword);
     return await this.update(id, {
       password: hashPassword,
     });

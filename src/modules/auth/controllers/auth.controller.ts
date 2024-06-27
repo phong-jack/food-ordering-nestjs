@@ -67,22 +67,6 @@ export class AuthController {
   }
 
   @CustomResponse({
-    message: 'Change password success!',
-    statusCode: HttpStatus.OK,
-  })
-  @UseGuards(AccessTokenGuard)
-  @Patch('change-password')
-  async changePassword(
-    @CurrentUser() user: any,
-    @Body() changePasswordDto: ChangePasswordDto,
-  ) {
-    return await this.authService.changePassword(
-      +user['sub'],
-      changePasswordDto,
-    );
-  }
-
-  @CustomResponse({
     message: 'Send forgot mail success!',
     statusCode: HttpStatus.OK,
   })

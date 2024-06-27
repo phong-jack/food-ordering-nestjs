@@ -69,6 +69,8 @@ export class CaslAbilityFactory {
     can(Action.Update, Order, { shipperId: user?.id });
     can(Action.Update, Order, { shopId: user.shop?.id });
 
+    can(Action.Update, User, { id: user?.id });
+
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<AppSubjects>,
