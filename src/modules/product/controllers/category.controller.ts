@@ -37,7 +37,7 @@ export class CategoryController {
     message: 'Get list category of shop success!',
     statusCode: HttpStatus.OK,
   })
-  @Get(':shopId')
+  @Get('shop/:shopId')
   async findByShop(@Param('shopId', ParseIntPipe) shopId: number) {
     return await this.categoryService.findByShop(shopId);
   }

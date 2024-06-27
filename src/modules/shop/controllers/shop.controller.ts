@@ -188,8 +188,8 @@ export class ShopController {
   }
 
   @Public()
-  @UseInterceptors(HttpCacheInteceptor)
-  @ConfigCache({ cacheKey: 'find_shop', eachUserConfig: true })
+  // @UseInterceptors(HttpCacheInteceptor)
+  // @ConfigCache({ cacheKey: 'find_shop', eachUserConfig: true })
   @CustomResponse({
     message: 'Get shop success!',
     statusCode: HttpStatus.OK,
@@ -199,8 +199,8 @@ export class ShopController {
     return await this.shopService.findOneById(id);
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies(new ShopFindDistancePolicyHanlder())
+  @UseGuards(RoleGuard)
+  @Roles(UserRole.ADMIN)
   @CustomResponse({
     message: 'Created shop!',
     statusCode: HttpStatus.CREATED,

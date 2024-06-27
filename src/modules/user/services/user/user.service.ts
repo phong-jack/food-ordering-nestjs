@@ -71,7 +71,16 @@ export class UserService {
     await this.userRepository.deleteUser(id);
   }
 
-  async update(id: number, userUpdateDto: UserUpdateDto): Promise<User> {
+  async update(
+    id: number,
+    userUpdateDto: UserUpdateDto,
+    abilities: AppAbility,
+  ): Promise<User> {
+    const user = await this.findById(id);
+    if (!abilities?.can(Action.Update, user)) {
+      throw new ForbiddenException('Not have permission change this resource');
+    }
+
     const updatedUser = await this.userRepository.update(id, userUpdateDto);
     return updatedUser;
   }
@@ -112,8 +121,12 @@ export class UserService {
     }
 
     const hashPassword = await hash(newPassword);
-    return await this.update(id, {
-      password: hashPassword,
-    });
+    return await this.update(
+      id,
+      {
+        password: hashPassword,
+      },
+      abilities,
+    );
   }
 }

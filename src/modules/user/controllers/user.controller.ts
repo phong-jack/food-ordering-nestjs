@@ -64,6 +64,8 @@ export class UserController {
     return await this.userService.findById(id);
   }
 
+  @UseGuards(RoleGuard)
+  @Roles(UserRole.ADMIN)
   @CustomResponse({
     message: 'Created new user!',
     statusCode: HttpStatus.CREATED,
@@ -74,6 +76,8 @@ export class UserController {
     return newUser;
   }
 
+  @UseGuards(RoleGuard)
+  @Roles(UserRole.ADMIN)
   @CustomResponse({
     message: 'Deleted successfull!',
     statusCode: HttpStatus.OK,
@@ -83,6 +87,8 @@ export class UserController {
     await this.userService.deleteUser(id);
   }
 
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new UserUpdatePolicy())
   @CustomResponse({
     message: 'Updated user successfull!',
     statusCode: HttpStatus.OK,
@@ -91,8 +97,9 @@ export class UserController {
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() userUpdateDto: UserUpdateDto,
+    @CurrentAbilities() abilities: AppAbility,
   ) {
-    const updatedUser = this.userService.update(id, userUpdateDto);
+    const updatedUser = this.userService.update(id, userUpdateDto, abilities);
     return updatedUser;
   }
 
