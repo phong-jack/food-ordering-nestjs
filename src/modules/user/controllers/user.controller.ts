@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   UseGuards,
@@ -28,6 +29,10 @@ import { Action } from 'src/modules/casl/constants/casl.constant';
 import { User } from '../entities/user.entity';
 import { PoliciesGuard } from 'src/modules/casl/guards/policy.guard';
 import { UserAuthorizeGuard } from 'src/modules/casl/guards/user.guard';
+import { UserChangePasswordDto } from '../dtos/user.change-password.dto';
+import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
+import { CurrentAbilities } from '@modules/casl/decorators/current-ability.decorator';
+import { UserUpdatePolicy } from '@modules/casl/policies/user/user.update.policy';
 
 @ApiBearerAuth()
 @UseGuards(AccessTokenGuard)
@@ -59,6 +64,8 @@ export class UserController {
     return await this.userService.findById(id);
   }
 
+  @UseGuards(RoleGuard)
+  @Roles(UserRole.ADMIN)
   @CustomResponse({
     message: 'Created new user!',
     statusCode: HttpStatus.CREATED,
@@ -69,6 +76,8 @@ export class UserController {
     return newUser;
   }
 
+  @UseGuards(RoleGuard)
+  @Roles(UserRole.ADMIN)
   @CustomResponse({
     message: 'Deleted successfull!',
     statusCode: HttpStatus.OK,
@@ -78,6 +87,8 @@ export class UserController {
     await this.userService.deleteUser(id);
   }
 
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new UserUpdatePolicy())
   @CustomResponse({
     message: 'Updated user successfull!',
     statusCode: HttpStatus.OK,
@@ -86,8 +97,28 @@ export class UserController {
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() userUpdateDto: UserUpdateDto,
+    @CurrentAbilities() abilities: AppAbility,
   ) {
-    const updatedUser = this.userService.update(id, userUpdateDto);
+    const updatedUser = this.userService.update(id, userUpdateDto, abilities);
     return updatedUser;
+  }
+
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new UserUpdatePolicy())
+  @CustomResponse({
+    message: 'Change user password successfull!',
+    statusCode: HttpStatus.OK,
+  })
+  @Patch(':id/change-password')
+  async changePassword(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() userChangePasswordDto: UserChangePasswordDto,
+    @CurrentAbilities() abilities: AppAbility,
+  ) {
+    return await this.userService.changePassword(
+      id,
+      userChangePasswordDto,
+      abilities,
+    );
   }
 }

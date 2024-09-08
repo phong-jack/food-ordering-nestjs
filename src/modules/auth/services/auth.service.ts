@@ -40,6 +40,13 @@ export class AuthService {
     if (userExist) {
       throw new BadRequestException('This username already exist');
     }
+    const isUsedPhone = await this.userService.findOneByPhone(
+      userCreateDto.phone,
+    );
+    if (isUsedPhone) {
+      throw new BadRequestException('This phone already used');
+    }
+
     const hashPassword = await this.hashData(userCreateDto.password);
     const newUser = await this.userService.create({
       ...userCreateDto,
@@ -87,6 +94,34 @@ export class AuthService {
 
   async logout(userId: number) {
     return await this.userService.update(userId, { refreshToken: null });
+  }
+
+  async refreshTokens(userId: number, refreshToken: string) {
+    const user = await this.userService.findById(userId);
+    if (!user || !user.refreshToken) {
+      throw new ForbiddenException('Access Denied');
+    }
+
+    const refreshTokenMatches = await argon2.verify(
+      user.refreshToken,
+      refreshToken,
+    );
+
+    if (!refreshTokenMatches) throw new ForbiddenException('Token not valid');
+
+    const tokens = await this.getTokens(
+      user.id,
+      user.username,
+      user.role,
+      user.shop?.id,
+    );
+
+    const newTokens = {
+      ...tokens,
+      refreshToken: refreshToken,
+    };
+
+    return newTokens;
   }
 
   async changePassword(userId: number, changePasswordDto: ChangePasswordDto) {

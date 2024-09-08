@@ -49,6 +49,7 @@ export class UserCreateDto {
     example: faker.internet.userName(),
     required: true,
   })
+  @IsString()
   readonly username: string;
 
   @ApiProperty({ example: 123456, required: true })

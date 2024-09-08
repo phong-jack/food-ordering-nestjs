@@ -10,11 +10,18 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ProductService } from '../services/product.service';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CustomResponse } from 'src/common/decorators/custom-response.interceptor';
 import { ProductCreateDto } from '../dtos/product.create.dto';
 import { ProductChangeStatusDto } from '../dtos/product.change-status.dto';
@@ -36,13 +43,18 @@ import { ProductUpdatePolicyHandler } from 'src/modules/casl/policies/product/pr
 import { CurrentAbilities } from 'src/modules/casl/decorators/current-ability.decorator';
 import { ProductUpdateDto } from '../dtos/product.update.dto';
 import { ProductDeletePolicyHandler } from 'src/modules/casl/policies/product/product.delete.policy';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { CloudinaryService } from '@modules/cloudinary/cloudinary.service';
 
 @ApiBearerAuth()
 @ApiTags('product')
 @UseGuards(AccessTokenGuard, RoleGuard)
 @Controller({ path: 'product', version: '1' })
 export class ProductController {
-  constructor(private productService: ProductService) {}
+  constructor(
+    private productService: ProductService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   // @Public()
   // @UseInterceptors(HttpCacheInteceptor)
@@ -62,28 +74,102 @@ export class ProductController {
     message: 'Get products success!',
     statusCode: HttpStatus.OK,
   })
-  @Get('')
+  @Get('list')
   async findByShop(@Query('shop', ParseIntPipe) shopId: number) {
     return await this.productService.findByShop(shopId);
+  }
+
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+    type: String,
+    examples: {
+      keyword: {
+        value: 'Trà',
+        description: 'search with key word',
+      },
+      nonKeyword: {
+        value: '',
+        description: 'search with no keyword',
+      },
+    },
+  })
+  @Public()
+  @CustomResponse({
+    message: 'Get products success!',
+    statusCode: HttpStatus.OK,
+  })
+  @Get('search-in-shop')
+  async searchProductsInShop(
+    @Query('shopId', ParseIntPipe) shopId: number,
+    @Query('keyword') keyword?: string,
+  ) {
+    return await this.productService.searchProductsInShop(shopId, keyword);
   }
 
   @CustomResponse({
     message: 'Get product success!',
     statusCode: HttpStatus.OK,
   })
-  @Get(':id')
+  @Get('detail/:id')
   async findById(@Param('id', ParseIntPipe) id: number) {
     return await this.productService.findById(id);
   }
 
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          default: 'Chân gà nướng',
+        },
+        description: { type: 'string', default: 'Gà kiến nướng cực ngon' },
+        price: { type: 'number', example: 20000 },
+        categoryId: {
+          type: 'number',
+          default: 'Some category id',
+          example: 1,
+        },
+        shopId: { type: 'number', default: 1000012108 },
+        image: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+      required: [
+        'name',
+        'description',
+        'price',
+        'categoryId',
+        'shopId',
+        'image',
+      ],
+    },
+  })
+  @UseInterceptors(FileInterceptor('image'))
   @CustomResponse({
     message: 'Created product!',
     statusCode: HttpStatus.CREATED,
   })
-  @Roles(UserRole.SHOP)
+  @Roles(UserRole.SHOP, UserRole.ADMIN)
   @Post('')
-  async createProduct(@Body() productCreateDto: ProductCreateDto) {
-    return await this.productService.createProduct(productCreateDto);
+  async createProduct(
+    @Body() productCreateDto: ProductCreateDto,
+    @UploadedFile() image: Express.Multer.File,
+  ) {
+    const folderName = 'product';
+    const cloudinaryResponse = await this.cloudinaryService.uploadFile(
+      image,
+      folderName,
+    );
+    console.log('Check dto:: ', cloudinaryResponse);
+
+    return await this.productService.createProduct({
+      ...productCreateDto,
+      image: cloudinaryResponse.url,
+    });
   }
 
   @UseGuards(PoliciesGuard)

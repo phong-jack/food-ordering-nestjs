@@ -21,7 +21,7 @@ import {
 } from '@nestjs/common';
 import { User } from '../user/entities/user.entity';
 import { Action } from './constants/casl.constant';
-import { Shop } from '../shop/entities/Shop';
+import { Shop } from '../shop/entities/shop.entity';
 import { Product } from '../product/entities/product.entity';
 import { ProductService } from '../product/services/product.service';
 import { Order } from '../order/entities/order.entity';
@@ -68,6 +68,8 @@ export class CaslAbilityFactory {
     can(Action.Update, Order, { userId: user?.id });
     can(Action.Update, Order, { shipperId: user?.id });
     can(Action.Update, Order, { shopId: user.shop?.id });
+
+    can(Action.Update, User, { id: user?.id });
 
     return build({
       detectSubjectType: (item) =>

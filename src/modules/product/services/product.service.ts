@@ -78,4 +78,8 @@ export class ProductService {
       productchangeStatusDto,
     );
   }
+
+  async searchProductsInShop(shopId: number, keyword: string) {
+    return await this.productRepository.searchProductsInShop(shopId, keyword);
+  }
 }

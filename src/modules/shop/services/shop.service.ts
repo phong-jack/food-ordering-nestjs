@@ -4,7 +4,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { ShopRepository } from '../repositories/shop.repository';
-import { Shop } from '../entities/Shop';
+import { Shop } from '../entities/shop.entity';
 import { ShopUpdateDto } from '../dtos/shop.update.dto';
 import { ShopCreateDto } from '../dtos/shop.create.dto';
 import { GeocodingService } from 'src/modules/geocoding/service/geocoding.service';
@@ -21,6 +21,9 @@ import { AppAbility } from 'src/modules/casl/casl-ability.factory';
 import { Action } from 'src/modules/casl/constants/casl.constant';
 import { subject } from '@casl/ability';
 import { Order } from 'src/modules/order/entities/order.entity';
+import { PaginateDto } from '../dtos/paginate.dto';
+import { PaginationDto } from 'src/utils/dtos/pagination.dto';
+import { ShopSearchDto } from '../dtos/shop.search.dto';
 
 @Injectable()
 export class ShopService {
@@ -40,6 +43,8 @@ export class ShopService {
   async findOneById(id: number): Promise<Shop> {
     return await this.shopRepository.findOneById(id);
   }
+
+  async findCategoryByShop(shopId: number) {}
 
   async updateShop(
     id: number,
@@ -130,5 +135,19 @@ export class ShopService {
     await this.shopQueue.add('shop-upsert', shopUpsertDto, { delay: 1000 });
 
     return;
+  }
+
+  async searchShopWithProduct(shopSearchDto: ShopSearchDto) {
+    return await this.shopRepository.searchShopWithProduct(shopSearchDto);
+  }
+
+  async filterShopWithCategory(
+    categoryIds: string[],
+    paginationDto: PaginationDto,
+  ) {
+    return await this.shopRepository.filterShopWithCategory(
+      categoryIds,
+      paginationDto,
+    );
   }
 }

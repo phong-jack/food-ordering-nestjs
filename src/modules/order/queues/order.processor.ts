@@ -5,7 +5,7 @@ import {
   WorkerHost,
 } from '@nestjs/bullmq';
 import { BadRequestException, HttpException, Logger } from '@nestjs/common';
-import { Job, Queue } from 'bullmq';
+import { Job, JobsOptions, Queue } from 'bullmq';
 import { QueueName } from 'src/common/constants/queue.constant';
 import * as Sentry from '@sentry/node';
 import { OrderService } from '../services/order.service';
@@ -26,7 +26,6 @@ import { ORDER_STATUS } from '../constants/order-status.constant';
 })
 export class OrderProcessor extends WorkerHost {
   private logger = new Logger(OrderProcessor.name);
-  private redisClient = new Redis();
 
   constructor(
     private readonly orderService: OrderService,
@@ -40,10 +39,21 @@ export class OrderProcessor extends WorkerHost {
 
   async process(job: Job<any, any, string>, token?: string): Promise<any> {
     const order = job.data as Order;
+
+    const jobOpt: JobsOptions = {
+      backoff: { type: 'fixed', delay: 1000 },
+      attempts: 60,
+      removeOnComplete: true,
+      removeOnFail: false,
+    };
+    job.opts = jobOpt;
+
     try {
       switch (job.name) {
         case 'order-find-shipper':
           return await this.handleFindShipper(order);
+        case 'order-risk-queue':
+          return await this.handleRiskQueue(order);
         default:
           throw new Error('No job name match');
       }
@@ -74,53 +84,55 @@ export class OrderProcessor extends WorkerHost {
 
   // find shipper
   async handleFindShipper(order: Order) {
-    const foundShippers = await this.userService.findAllBy({
+    const foundShipper = await this.userService.findOneBy({
       role: UserRole.SHIPPER,
       userMetadata: { key: USER_METADATA_KEY.SHIPPER_STATUS, value: 'ready' },
     });
-    console.log('Check shipper:: ', foundShippers);
+    console.log('Check shipper:: ', foundShipper);
 
-    if (!foundShippers || foundShippers.length === 0) {
-      throw new BadRequestException('Shipper not ready :)');
+    if (!foundShipper) {
+      throw new BadRequestException('Not found ready shipper :)');
     }
 
-    await this.handleFindShipperSuccess(foundShippers, order);
+    await this.handleFindShipperSuccess(foundShipper, order);
   }
 
-  async handleFindShipperSuccess(shippers: User[], order: Order) {
-    for (const shipper of shippers) {
-      const updatedOrder = await this.orderService.update(order.id, {
-        shipperId: shipper.id,
-      });
+  async handleFindShipperSuccess(shipper: User, order: Order) {
+    const updatedOrder = await this.orderService.update(order.id, {
+      shipperId: shipper.id,
+    });
+    await this.orderService.updateShipperStatus(shipper.id, 'shipping');
 
-      await this.orderService.updateShipperStatus(shipper.id, 'shipping');
-
-      await this.redisClient.del(this.makeJobKey(order.id));
-      return updatedOrder;
-    }
+    return updatedOrder;
   }
 
   async handleJobError(job: Job, error: Error): Promise<void> {
     const order = job.data as Order;
-
-    const key = this.makeJobKey(order.id);
     const maxAttempts = 60; // 60s
-    const delay = 1000; // 1 second
+    const currentAttempts = job.attemptsMade;
 
-    const attempts = await this.redisClient.incr(key);
+    console.log('Current attemps:: ', currentAttempts);
 
-    if (attempts <= maxAttempts) {
-      await this.orderQueue.add(job.name, job.data, {
-        delay: delay,
-      });
-    } else {
+    if (currentAttempts > maxAttempts) {
+      await job.remove();
       await this.orderService.changeStatus(order.id, {
         statusCode: ORDER_STATUS.CANCEL,
       });
     }
+    await job.moveToFailed(error, '', true);
   }
 
-  private makeJobKey(orderId: number): string {
-    return `order:${orderId}:attempts`;
+  async handleRiskQueue(order: Order) {
+    const orderEndStatus = [
+      ORDER_STATUS.FINISHED,
+      ORDER_STATUS.REJECTED,
+      ORDER_STATUS.RISK,
+    ];
+
+    this.logger.log('Check risk');
+    const orderNow = await this.orderService.findById(order.id);
+    if (!orderEndStatus.includes(orderNow.orderStatus.statusCode)) {
+      await this.orderService.updateRiskStatus(order.id);
+    }
   }
 }

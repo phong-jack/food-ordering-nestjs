@@ -1,12 +1,15 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Shop } from '../entities/Shop';
-import { FindManyOptions, Repository } from 'typeorm';
+import { Shop } from '../entities/shop.entity';
+import { Brackets, FindManyOptions, Repository } from 'typeorm';
 import { ShopCreateDto } from '../dtos/shop.create.dto';
 import { ShopUpdateDto } from '../dtos/shop.update.dto';
 import { BadRequestException } from '@nestjs/common';
 import { BaseRepositoryAbstract } from 'src/common/base/base.abstract.repository';
 import { Geometry } from 'src/modules/geocoding/interfaces/geocoding.response';
 import { ShopUpsertDto } from '../dtos/shop.upsert.dto';
+import { PaginationDto } from 'src/utils/dtos/pagination.dto';
+import { Product } from 'src/modules/product/entities/product.entity';
+import { ShopSearchDto } from '../dtos/shop.search.dto';
 
 export class ShopRepository extends BaseRepositoryAbstract<Shop> {
   constructor(
@@ -75,5 +78,63 @@ export class ShopRepository extends BaseRepositoryAbstract<Shop> {
     if (!id) throw new Error('Error upsert shop ');
     const shopUpseted = await this.findOneById(id);
     return shopUpseted;
+  }
+
+  async searchShopWithProduct(
+    shopSearchDto: ShopSearchDto,
+  ): Promise<[Shop[], number]> {
+    const { keyword, page, limit, orderBy, sortBy } = shopSearchDto;
+    const regexKeyword = `.*${keyword.toLowerCase()}.*`;
+
+    const skip = (page - 1) * limit;
+    const sortField = sortBy ? `shop.${sortBy}` : `shop.name`;
+
+    const shops = await this.shopRepository
+      .createQueryBuilder('shop')
+      .leftJoinAndSelect(
+        'shop.products',
+        'product',
+        'product.name REGEXP :regexKeyword',
+        { regexKeyword },
+      )
+      .where(
+        new Brackets((qb) =>
+          qb
+            .where('product.name REGEXP  :regexKeyword', { regexKeyword })
+            .orWhere('shop.name REGEXP  :regexKeyword', { regexKeyword }),
+        ),
+      )
+      .take(limit)
+      .skip(skip)
+      .orderBy('product.name', 'DESC')
+      .addOrderBy(sortField, orderBy)
+      .getManyAndCount();
+
+    return shops;
+  }
+
+  async filterShopWithCategory(
+    categoryIds: string[],
+    paginationDto: PaginationDto,
+  ): Promise<[Shop[], number]> {
+    const { page, limit, orderBy, sortBy } = paginationDto;
+
+    const skip = (page - 1) * limit;
+    const sortField = sortBy ? `shop.${sortBy}` : `shop.name`;
+
+    const queryBuilder = this.shopRepository
+      .createQueryBuilder('shop')
+      .leftJoin('shop.products', 'product')
+      .leftJoin('product.category', 'category')
+      .take(limit)
+      .skip(skip)
+      .orderBy(sortField, orderBy);
+
+    if (categoryIds.length !== 0) {
+      queryBuilder.where('category.id IN (:...categoryIds)', { categoryIds });
+    }
+
+    const shops = await queryBuilder.getManyAndCount();
+    return shops;
   }
 }
