@@ -12,7 +12,7 @@ This project is an online food ordering system built with NestJS, providing a pl
 - Tracking order status.
 - Rating and reviewing shop/dishes (not yet implemented).
 
-### Restaurant Module:
+### Shop Module:
 - Restaurant information management.
 - Adding, editing, and deleting dishes.
 - Accepting orders from customers.
@@ -58,9 +58,9 @@ This project is an online food ordering system built with NestJS, providing a pl
 
 3. Configure database and other necessary information in the `.env` file.
 
-4. Run migrations (if needed):
+4. Run seed (if needed):
     ```bash
-    npm run migration:run
+    npm run seed
     ```
 
 5. Start the server:
