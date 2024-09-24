@@ -1,73 +1,82 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# Food Ordering System with NestJS 🍔🍕🛵
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This project is an online food ordering system built with NestJS, providing a platform to connect users, shop, and delivery drivers.
 
-## Description
+## Key Features:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### User Module:
+- User registration, login, and account verification.
+- Personal information management.
+- Placing food orders from shop.
+- Tracking order status.
+- Rating and reviewing shop/dishes (not yet implemented).
 
-## Installation
+### Restaurant Module:
+- Restaurant information management.
+- Adding, editing, and deleting dishes.
+- Accepting orders from customers.
+- Updating order status.
+- Tracking sales statistics (not yet implemented).
 
-```bash
-$ npm install
+### Driver Module:
+- Receiving new orders.
+- Accepting and updating delivery status.
+
+### Order Module:
+- Managing order information.
+- Tracking order status (Created, Confirmed, Shipping, Completed, Canceled).
+- Canceling orders (if no driver is found).
+
+### Other Modules:
+- **Auth Module**: Handles authentication using JWT.
+- **Product Module**: Manages dish information.
+- **Category Module**: Manages dish categories.
+- **Setting Module**: Configures system settings.
+- **Notification Module**: Sends notifications to users.
+
+## Technologies Used:
+- NestJS
+- TypeScript
+- TypeORM
+- MySQL
+- JWT (JSON Web Token)
+- Firebase Cloud Messaging (FCM) (or any another notification solution)
+- Socket.IO (for real-time features)
+
+## Installation and Running:
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/your-username/food-ordering-nestjs.git
+    ```
+
+2. Install dependencies:
+    ```bash
+    npm install
+    ```
+
+3. Configure database and other necessary information in the `.env` file.
+
+4. Run migrations (if needed):
+    ```bash
+    npm run migration:run
+    ```
+
+5. Start the server:
+    ```bash
+    npm run start:dev
+    ```
+
+## API Documentation:
+
+(Provide detailed API documentation here, for example, using Swagger)
 ```
-
-## Running the app
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+http:/localhost:[PORT]//document
 ```
+## Author:
+phong-jack 
 
-## Test
 
-```bash
-# unit tests
-$ npm run test
 
-# e2e tests
-$ npm run test:e2e
 
-# test coverage
-$ npm run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
